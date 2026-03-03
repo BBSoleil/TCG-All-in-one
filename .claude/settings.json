@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "bash(npm run *)",
+      "bash(npx prisma *)",
+      "bash(npx vitest *)",
+      "bash(npx tsc *)",
+      "bash(npx eslint *)",
+      "bash(git *)",
+      "bash(mkdir *)",
+      "bash(cat *)",
+      "bash(ls *)"
+    ],
+    "deny": [
+      "bash(rm -rf /)",
+      "bash(sudo *)"
+    ]
+  }
+}
