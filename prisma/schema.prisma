@@ -30,13 +30,32 @@ model User {
   name          String?
   passwordHash  String?
   image         String?
+  bio                String?
+  isPublic           Boolean   @default(false)
+  subscriptionTier   String    @default("free") // free | master
+  stripeCustomerId   String?   @unique
+  stripeSubscriptionId String?
   emailVerified DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts   Account[]
-  sessions   Session[]
-  collections Collection[]
+  accounts         Account[]
+  sessions         Session[]
+  collections      Collection[]
+  wishlistCards    WishlistCard[]
+  decks            Deck[]
+  listings         Listing[]
+  offersMade       Offer[]           @relation("buyer")
+  salesMade        Transaction[]     @relation("seller")
+  purchases        Transaction[]     @relation("buyer_tx")
+  ratingsGiven     UserRating[]      @relation("rater")
+  ratingsReceived  UserRating[]      @relation("ratee")
+  followers           Follow[]             @relation("following")
+  following           Follow[]             @relation("follower")
+  achievements        UserAchievement[]
+  portfolioSnapshots  PortfolioSnapshot[]
+  notifications       Notification[]
+  savedSearches       SavedSearch[]
 
   @@map("users")
 }
@@ -99,6 +118,10 @@ model Card {
   mtgDetails     MtgCardDetails?
   onepieceDetails OnePieceCardDetails?
   collectionCards CollectionCard[]
+  wishlistCards   WishlistCard[]
+  deckCards       DeckCard[]
+  listings        Listing[]
+  priceHistory    PriceHistory[]
 
   @@index([gameType])
   @@index([name])
@@ -173,6 +196,7 @@ model Collection {
   id        String   @id @default(cuid())
   name      String
   gameType  GameType
+  isPublic  Boolean  @default(false)
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -197,5 +221,244 @@ model CollectionCard {
   card       Card       @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@unique([collectionId, cardId])
+  @@index([collectionId])
   @@map("collection_cards")
+}
+
+model WishlistCard {
+  id          String   @id @default(cuid())
+  userId      String
+  cardId      String
+  targetPrice Decimal? @db.Decimal(10, 2)
+  notes       String?
+  addedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId])
+  @@map("wishlist_cards")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+model Achievement {
+  id          String @id @default(cuid())
+  code        String @unique
+  name        String
+  description String
+  icon        String // emoji or icon name
+  category    String // collection, social, milestone
+  threshold   Int    // numeric threshold to earn (e.g. 100 cards)
+
+  users UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Deck {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  gameType    GameType
+  format      String?  // e.g. "Standard", "Expanded", "Modern", "Commander"
+  isPublic    Boolean  @default(false)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards DeckCard[]
+
+  @@index([userId])
+  @@index([gameType])
+  @@map("decks")
+}
+
+model DeckCard {
+  id         String  @id @default(cuid())
+  deckId     String
+  cardId     String
+  quantity   Int     @default(1)
+  isSideboard Boolean @default(false)
+
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([deckId, cardId, isSideboard])
+  @@index([deckId])
+  @@map("deck_cards")
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  CANCELLED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  WITHDRAWN
+}
+
+model Listing {
+  id          String        @id @default(cuid())
+  userId      String
+  cardId      String
+  price       Decimal       @db.Decimal(10, 2)
+  condition   String        // Mint, Near Mint, Lightly Played, etc.
+  description String?
+  quantity    Int           @default(1)
+  isTradeOnly Boolean       @default(false)
+  status      ListingStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card         Card          @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  offers       Offer[]
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([cardId])
+  @@index([status])
+  @@map("listings")
+}
+
+model Offer {
+  id        String      @id @default(cuid())
+  listingId String
+  buyerId   String
+  price     Decimal     @db.Decimal(10, 2)
+  message   String?
+  status    OfferStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("buyer", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@index([status])
+  @@map("offers")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  listingId   String
+  sellerId    String
+  buyerId     String
+  price       Decimal  @db.Decimal(10, 2)
+  completedAt DateTime @default(now())
+
+  listing Listing      @relation(fields: [listingId], references: [id])
+  seller  User         @relation("seller", fields: [sellerId], references: [id])
+  buyer   User         @relation("buyer_tx", fields: [buyerId], references: [id])
+  ratings UserRating[]
+
+  @@index([sellerId])
+  @@index([buyerId])
+  @@map("transactions")
+}
+
+model UserRating {
+  id            String   @id @default(cuid())
+  transactionId String
+  raterId       String
+  rateeId       String
+  score         Int      // 1–5
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  rater       User        @relation("rater", fields: [raterId], references: [id])
+  ratee       User        @relation("ratee", fields: [rateeId], references: [id])
+
+  @@unique([transactionId, raterId])
+  @@map("user_ratings")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // price_alert, achievement, system
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+model PortfolioSnapshot {
+  id        String   @id @default(cuid())
+  userId    String
+  value     Decimal  @db.Decimal(12, 2)
+  cardCount Int
+  recordedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, recordedAt])
+  @@map("portfolio_snapshots")
+}
+
+model PriceHistory {
+  id         String   @id @default(cuid())
+  cardId     String
+  price      Decimal  @db.Decimal(10, 2)
+  recordedAt DateTime @default(now())
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, recordedAt])
+  @@map("price_history")
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  filters   String   // JSON-encoded search params
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_searches")
 }

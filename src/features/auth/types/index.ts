@@ -15,3 +15,9 @@ export interface SignupCredentials {
   password: string;
   name: string;
 }
+
+export interface AuthActionState {
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  success?: boolean;
+}

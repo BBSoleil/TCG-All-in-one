@@ -1,0 +1,13 @@
+{
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/price-alerts",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/price-sync",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}

@@ -1,1 +1,2 @@
-// social actions barrel export
+export { followAction, unfollowAction } from "./follow";
+export { toggleProfileVisibilityAction, toggleCollectionVisibilityAction, updateBioAction, searchUsersAction } from "./profile";

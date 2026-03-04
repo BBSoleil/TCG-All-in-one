@@ -1,21 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Bebas_Neue } from "next/font/google";
+import { SessionProvider } from "@/shared/providers/session-provider";
+import { ThemeProvider } from "@/shared/providers/theme-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const bebasNeue = Bebas_Neue({
+  variable: "--font-bebas-neue",
+  weight: "400",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "TCG All-in-One",
+  title: "TCG All-in-One | Intelligent Collector's Vault",
   description:
-    "Multi-license digital platform for TCG collectors and players",
+    "Turn your TCG collection into an intelligent portfolio. Track, value, build, and connect across Pokemon, Yu-Gi-Oh!, Magic: The Gathering, and One Piece.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "TCG AIO",
+  },
+  other: {
+    "theme-color": "#a855f7",
+  },
 };
 
 export default function RootLayout({
@@ -24,11 +36,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${dmSans.variable} ${bebasNeue.variable} antialiased bg-background text-foreground overflow-x-hidden`}
       >
-        {children}
+        <ThemeProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

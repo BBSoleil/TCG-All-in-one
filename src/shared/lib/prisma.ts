@@ -1,6 +1,20 @@
-// Prisma client singleton
-// Adapter setup is required for Prisma 7 — configure when database is ready
-// See: https://pris.ly/d/prisma7-client-config
+import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-export { PrismaClient } from "@/generated/prisma/client";
-export type { User, Card, Collection, CollectionCard } from "@/generated/prisma/client";
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+function createPrismaClient(): PrismaClient {
+  const connectionString = process.env["DATABASE_URL"];
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter });
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+
+export type { User, Account, Session, Collection, CollectionCard, Card } from "@/generated/prisma/client";

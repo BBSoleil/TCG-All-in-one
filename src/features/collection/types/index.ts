@@ -30,3 +30,9 @@ export interface AddCardInput {
   condition?: string;
   notes?: string;
 }
+
+export interface CollectionActionState {
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  success?: boolean;
+}

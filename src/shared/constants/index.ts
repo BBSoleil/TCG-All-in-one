@@ -4,6 +4,20 @@ export const APP_DESCRIPTION =
 
 export const SUPPORTED_GAMES = ["POKEMON", "YUGIOH", "MTG", "ONEPIECE"] as const;
 
+export const GAME_COLORS: Record<string, string> = {
+  POKEMON: "bg-yellow-500",
+  YUGIOH: "bg-purple-600",
+  MTG: "bg-red-600",
+  ONEPIECE: "bg-blue-600",
+};
+
+export const GAME_BORDER_COLORS: Record<string, string> = {
+  POKEMON: "border-yellow-500/30",
+  YUGIOH: "border-purple-600/30",
+  MTG: "border-red-600/30",
+  ONEPIECE: "border-blue-600/30",
+};
+
 export const CARD_CONDITIONS = [
   "Mint",
   "Near Mint",
