@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -43,6 +43,7 @@ export function CardSearchFilters({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const updateParams = useCallback(
     (key: string, value: string) => {
@@ -53,7 +54,9 @@ export function CardSearchFilters({
         params.delete(key);
       }
       params.delete("page");
-      router.push(`/cards?${params.toString()}`);
+      startTransition(() => {
+        router.push(`/cards?${params.toString()}`);
+      });
     },
     [router, searchParams],
   );
@@ -72,7 +75,9 @@ export function CardSearchFilters({
     const params = new URLSearchParams();
     const gt = searchParams.get("gameType");
     if (gt) params.set("gameType", gt);
-    router.push(`/cards?${params.toString()}`);
+    startTransition(() => {
+      router.push(`/cards?${params.toString()}`);
+    });
   }, [router, searchParams]);
 
   const hasFilters =
@@ -82,7 +87,7 @@ export function CardSearchFilters({
     searchParams.get("sortBy");
 
   return (
-    <div className="space-y-3">
+    <div className={`space-y-3 ${isPending ? "opacity-60 pointer-events-none" : ""}`}>
       <div className="flex flex-col gap-3 sm:flex-row">
         <form onSubmit={handleSearch} className="flex flex-1 gap-2">
           <Input

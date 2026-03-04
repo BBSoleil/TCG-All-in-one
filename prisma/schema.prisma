@@ -125,6 +125,8 @@ model Card {
 
   @@index([gameType])
   @@index([name])
+  @@index([gameType, name])
+  @@index([gameType, setName])
   @@map("cards")
 }
 
