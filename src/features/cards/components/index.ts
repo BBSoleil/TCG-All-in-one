@@ -2,5 +2,8 @@ export { CardGrid } from "./card-grid";
 export { CardSearchFilters } from "./card-search-filters";
 export { CardPagination } from "./card-pagination";
 export { GameTabs } from "./game-tabs";
+export { GameTabsClient } from "./game-tabs-client";
 export { SetGrid } from "./set-grid";
 export { CardBreadcrumb } from "./card-breadcrumb";
+export { CardGridSkeleton } from "./card-grid-skeleton";
+export { CardBrowserClient } from "./card-browser-client";

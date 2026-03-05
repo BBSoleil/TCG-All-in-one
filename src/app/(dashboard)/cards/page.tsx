@@ -2,14 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { searchCards, getSetsForGame } from "@/features/cards/services";
-import {
-  CardGrid,
-  CardSearchFilters,
-  CardPagination,
-  GameTabs,
-  SetGrid,
-  CardBreadcrumb,
-} from "@/features/cards/components";
+import { CardBrowserClient } from "@/features/cards/components";
 import { Button } from "@/components/ui/button";
 import type { GameType } from "@/shared/types";
 import type { GameSpecificFilters, SortBy } from "@/features/cards/types";
@@ -59,6 +52,12 @@ export default async function CardsPage({
   const hasGameFilters = Object.values(gameFilters).some((v) => v !== undefined);
   const showCardList = Boolean(query || setName || rarity || hasGameFilters);
 
+  // Fetch initial data server-side for SSR/SEO
+  const setsResult = await getSetsForGame(gameType);
+  const sets = setsResult.success ? setsResult.data : [];
+  const setNamesList = sets.map((s) => s.setName);
+
+  let initialData = null;
   if (showCardList) {
     const result = await searchCards({
       query,
@@ -70,58 +69,8 @@ export default async function CardsPage({
       pageSize: 20,
       gameFilters: hasGameFilters ? gameFilters : undefined,
     });
-
-    const data = result.success
-      ? result.data
-      : { cards: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
-
-    const setsResult = await getSetsForGame(gameType);
-    const sets = setsResult.success ? setsResult.data.map((s) => s.setName) : [];
-
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight md:text-2xl">Card Browser</h1>
-            <p className="text-sm text-muted-foreground md:text-base">
-              Search and browse cards across all supported games.
-            </p>
-          </div>
-          <Link href="/cards/import" className="shrink-0">
-            <Button variant="outline" className="w-full sm:w-auto">Import cards</Button>
-          </Link>
-        </div>
-
-        <GameTabs activeGame={gameType} />
-
-        <Suspense>
-          <SavedSearchesWrapper />
-        </Suspense>
-
-        <CardBreadcrumb gameType={gameType} setName={setName} />
-
-        <Suspense>
-          <CardSearchFilters sets={sets} gameType={gameType} />
-        </Suspense>
-
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {data.total} card{data.total !== 1 ? "s" : ""} found
-          </p>
-        </div>
-
-        <CardGrid cards={data.cards} />
-
-        <Suspense>
-          <CardPagination page={data.page} totalPages={data.totalPages} />
-        </Suspense>
-      </div>
-    );
+    initialData = result.success ? result.data : null;
   }
-
-  // Browse mode: show sets grouped by game
-  const setsResult = await getSetsForGame(gameType);
-  const sets = setsResult.success ? setsResult.data : [];
 
   return (
     <div className="space-y-6">
@@ -129,7 +78,7 @@ export default async function CardsPage({
         <div>
           <h1 className="text-xl font-bold tracking-tight md:text-2xl">Card Browser</h1>
           <p className="text-sm text-muted-foreground md:text-base">
-            Browse {sets.reduce((sum, s) => sum + s.cardCount, 0).toLocaleString()} cards across {sets.length} sets.
+            Search and browse cards across all supported games.
           </p>
         </div>
         <Link href="/cards/import" className="shrink-0">
@@ -137,17 +86,18 @@ export default async function CardsPage({
         </Link>
       </div>
 
-      <GameTabs activeGame={gameType} />
-
       <Suspense>
         <SavedSearchesWrapper />
       </Suspense>
 
       <Suspense>
-        <CardSearchFilters sets={sets.map((s) => s.setName)} gameType={gameType} />
+        <CardBrowserClient
+          initialData={initialData}
+          initialSets={sets}
+          initialSetNames={setNamesList}
+          initialMode={showCardList ? "search" : "browse"}
+        />
       </Suspense>
-
-      <SetGrid sets={sets} groupByGame={!gameType} />
     </div>
   );
 }
