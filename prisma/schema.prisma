@@ -57,6 +57,7 @@ model User {
   notifications       Notification[]
   savedSearches       SavedSearch[]
 
+  @@index([isPublic])
   @@map("users")
 }
 
@@ -77,6 +78,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -88,6 +90,7 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -127,6 +130,8 @@ model Card {
   @@index([name])
   @@index([gameType, name])
   @@index([gameType, setName])
+  @@index([externalId])
+  @@index([marketPrice])
   @@map("cards")
 }
 
@@ -414,6 +419,8 @@ model UserRating {
   ratee       User        @relation("ratee", fields: [rateeId], references: [id])
 
   @@unique([transactionId, raterId])
+  @@index([rateeId])
+  @@index([raterId])
   @@map("user_ratings")
 }
 

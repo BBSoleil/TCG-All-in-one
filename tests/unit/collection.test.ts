@@ -149,21 +149,18 @@ describe("addCardToCollection", () => {
 
 describe("getDashboardStats", () => {
   beforeEach(() => {
-    mockPrisma.collection.findMany.mockReset();
-    mockPrisma.collectionCard.findMany.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
   });
 
   it("calculates portfolio stats correctly", async () => {
-    mockPrisma.collection.findMany.mockResolvedValue([
-      { gameType: "POKEMON", _count: { cards: 10 } },
-      { gameType: "POKEMON", _count: { cards: 5 } },
-      { gameType: "MTG", _count: { cards: 3 } },
-    ]);
-    mockPrisma.collectionCard.findMany.mockResolvedValue([
-      { quantity: 2, card: { marketPrice: 10 } },
-      { quantity: 1, card: { marketPrice: 25.5 } },
-      { quantity: 3, card: { marketPrice: null } },
-    ]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([
+        { gameType: "POKEMON", count: 2 },
+        { gameType: "MTG", count: 1 },
+      ]) // game breakdown
+      .mockResolvedValueOnce([
+        { totalCollections: 3, totalCards: 18, portfolioValue: 45.5 },
+      ]); // summary
 
     const result = await getDashboardStats("user-1");
 
@@ -171,14 +168,17 @@ describe("getDashboardStats", () => {
     if (result.success) {
       expect(result.data.totalCollections).toBe(3);
       expect(result.data.totalCards).toBe(18);
-      expect(result.data.portfolioValue).toBe(45.5); // 2*10 + 1*25.5 + 0
+      expect(result.data.portfolioValue).toBe(45.5);
       expect(result.data.collectionsByGame).toHaveLength(2);
     }
   });
 
   it("returns zeros for user with no collections", async () => {
-    mockPrisma.collection.findMany.mockResolvedValue([]);
-    mockPrisma.collectionCard.findMany.mockResolvedValue([]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([]) // game breakdown
+      .mockResolvedValueOnce([
+        { totalCollections: 0, totalCards: 0, portfolioValue: 0 },
+      ]); // summary
 
     const result = await getDashboardStats("empty-user");
 

@@ -13,6 +13,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/shared/lib/format";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Leaderboards | TCG All-in-One",
   description: "Top collectors ranked by portfolio value, cards, followers, achievements, and trades.",

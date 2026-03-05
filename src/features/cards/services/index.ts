@@ -1,9 +1,8 @@
 import { prisma } from "@/shared/lib/prisma";
+import { cached } from "@/shared/lib/cache";
 import type { GameType as PrismaGameType, Rarity as PrismaRarity, Prisma } from "@/generated/prisma/client";
 import type { Result, GameType } from "@/shared/types";
 import type { CardListItem, CardSearchParams, SetInfo } from "@/features/cards/types";
-import { cached } from "@/shared/lib/cache";
-
 export interface CardSearchResult {
   cards: CardListItem[];
   total: number;
@@ -85,13 +84,17 @@ async function getSetsForGameUncached(
     }));
 }
 
-const getCachedSets = cached(getSetsForGameUncached, ["card-sets"], { revalidate: 300 });
+const getSetsForGameCached = cached(
+  (gameTypeStr: string) => getSetsForGameUncached(gameTypeStr === "__all__" ? undefined : gameTypeStr as GameType),
+  ["card-sets"],
+  { revalidate: 300 },
+);
 
 export async function getSetsForGame(
   gameType?: GameType,
 ): Promise<Result<SetInfo[]>> {
   try {
-    const sets = await getCachedSets(gameType);
+    const sets = await getSetsForGameCached(gameType ?? "__all__");
     return { success: true, data: sets };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to fetch sets") };
@@ -223,13 +226,17 @@ async function searchCardsUncached(
   };
 }
 
-const getCachedSearch = cached(searchCardsUncached, ["card-search"], { revalidate: 60 });
+const searchCardsCached = cached(
+  searchCardsUncached,
+  ["card-search"],
+  { revalidate: 60 },
+);
 
 export async function searchCards(
   params: CardSearchParams,
 ): Promise<Result<CardSearchResult>> {
   try {
-    const data = await getCachedSearch(JSON.stringify(params));
+    const data = await searchCardsCached(JSON.stringify(params));
     return { success: true, data };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to search cards") };

@@ -63,7 +63,78 @@ export async function getCollectionById(
   }
 }
 
+const CARDS_PER_PAGE = 24;
+
+export interface PaginatedCollectionCards {
+  cards: CollectionCardWithDetails[];
+  total: number;
+  page: number;
+  totalPages: number;
+  collectionValue: number;
+}
+
 export async function getCollectionCards(
+  collectionId: string,
+  userId: string,
+  page = 1,
+): Promise<Result<PaginatedCollectionCards>> {
+  try {
+    const collection = await prisma.collection.findFirst({
+      where: { id: collectionId, userId },
+      select: { id: true },
+    });
+    if (!collection) {
+      return { success: false, error: new Error("Collection not found") };
+    }
+
+    const offset = (page - 1) * CARDS_PER_PAGE;
+
+    const [cards, total, valueRows] = await Promise.all([
+      prisma.collectionCard.findMany({
+        where: { collectionId },
+        include: {
+          card: {
+            select: {
+              id: true,
+              name: true,
+              gameType: true,
+              setName: true,
+              rarity: true,
+              imageUrl: true,
+              marketPrice: true,
+            },
+          },
+        },
+        orderBy: { addedAt: "desc" },
+        take: CARDS_PER_PAGE,
+        skip: offset,
+      }),
+      prisma.collectionCard.count({ where: { collectionId } }),
+      prisma.$queryRawUnsafe<{ value: number }[]>(
+        `SELECT COALESCE(SUM(cc.quantity * COALESCE(c."marketPrice", 0)), 0)::float as value
+         FROM "CollectionCard" cc
+         JOIN "Card" c ON c.id = cc."cardId"
+         WHERE cc."collectionId" = $1`,
+        collectionId,
+      ),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        cards,
+        total,
+        page,
+        totalPages: Math.ceil(total / CARDS_PER_PAGE),
+        collectionValue: valueRows[0]?.value ?? 0,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error : new Error("Failed to fetch cards") };
+  }
+}
+
+export async function getAllCollectionCards(
   collectionId: string,
   userId: string,
 ): Promise<Result<CollectionCardWithDetails[]>> {
@@ -75,19 +146,13 @@ export async function getCollectionCards(
     if (!collection) {
       return { success: false, error: new Error("Collection not found") };
     }
-
     const cards = await prisma.collectionCard.findMany({
       where: { collectionId },
       include: {
         card: {
           select: {
-            id: true,
-            name: true,
-            gameType: true,
-            setName: true,
-            rarity: true,
-            imageUrl: true,
-            marketPrice: true,
+            id: true, name: true, gameType: true, setName: true,
+            rarity: true, imageUrl: true, marketPrice: true,
           },
         },
       },
@@ -245,41 +310,37 @@ export async function getDashboardStats(userId: string): Promise<
   }>
 > {
   try {
-    const collections = await prisma.collection.findMany({
-      where: { userId },
-      select: {
-        gameType: true,
-        _count: { select: { cards: true } },
-      },
-    });
+    const [gameRows, summaryRows] = await Promise.all([
+      prisma.$queryRawUnsafe<{ gameType: string; count: number }[]>(
+        `SELECT "gameType", COUNT(*)::int as count
+         FROM "Collection"
+         WHERE "userId" = $1
+         GROUP BY "gameType"`,
+        userId,
+      ),
+      prisma.$queryRawUnsafe<{ totalCollections: number; totalCards: number; portfolioValue: number }[]>(
+        `SELECT
+           COUNT(DISTINCT col.id)::int as "totalCollections",
+           COALESCE(SUM(cc.quantity), 0)::int as "totalCards",
+           COALESCE(SUM(cc.quantity * COALESCE(c."marketPrice", 0)), 0)::float as "portfolioValue"
+         FROM "Collection" col
+         LEFT JOIN "CollectionCard" cc ON cc."collectionId" = col.id
+         LEFT JOIN "Card" c ON c.id = cc."cardId"
+         WHERE col."userId" = $1`,
+        userId,
+      ),
+    ]);
 
-    const totalCollections = collections.length;
-    const totalCards = collections.reduce((sum, c) => sum + c._count.cards, 0);
-
-    const gameMap = new Map<string, number>();
-    for (const c of collections) {
-      gameMap.set(c.gameType, (gameMap.get(c.gameType) ?? 0) + 1);
-    }
-    const collectionsByGame = Array.from(gameMap.entries()).map(
-      ([gameType, count]) => ({ gameType, count }),
-    );
-
-    // Calculate portfolio value
-    const collectionCards = await prisma.collectionCard.findMany({
-      where: { collection: { userId } },
-      select: {
-        quantity: true,
-        card: { select: { marketPrice: true } },
-      },
-    });
-    const portfolioValue = collectionCards.reduce((sum, cc) => {
-      const price = cc.card.marketPrice ? Number(cc.card.marketPrice) : 0;
-      return sum + price * cc.quantity;
-    }, 0);
+    const summary = summaryRows[0] ?? { totalCollections: 0, totalCards: 0, portfolioValue: 0 };
 
     return {
       success: true,
-      data: { totalCollections, totalCards, portfolioValue, collectionsByGame },
+      data: {
+        totalCollections: summary.totalCollections,
+        totalCards: summary.totalCards,
+        portfolioValue: summary.portfolioValue,
+        collectionsByGame: gameRows,
+      },
     };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to fetch stats") };
@@ -291,51 +352,34 @@ export async function getSetCompletion(
   userId: string,
 ): Promise<Result<{ setName: string; owned: number; total: number }[]>> {
   try {
-    const collection = await prisma.collection.findFirst({
-      where: { id: collectionId, userId },
-      select: { gameType: true },
-    });
-    if (!collection) {
-      return { success: false, error: new Error("Collection not found") };
-    }
+    const rows = await prisma.$queryRawUnsafe<
+      { setName: string; owned: number; total: number }[]
+    >(
+      `SELECT
+         owned."setName",
+         owned.owned::int,
+         COALESCE(total.total, 0)::int as total
+       FROM (
+         SELECT c."setName", COUNT(DISTINCT cc."cardId")::int as owned
+         FROM "CollectionCard" cc
+         JOIN "Card" c ON c.id = cc."cardId"
+         JOIN "Collection" col ON col.id = cc."collectionId"
+         WHERE cc."collectionId" = $1 AND col."userId" = $2 AND c."setName" IS NOT NULL
+         GROUP BY c."setName"
+       ) owned
+       LEFT JOIN (
+         SELECT "setName", COUNT(*)::int as total
+         FROM "Card"
+         WHERE "gameType" = (SELECT "gameType" FROM "Collection" WHERE id = $1)
+           AND "setName" IS NOT NULL
+         GROUP BY "setName"
+       ) total ON total."setName" = owned."setName"
+       ORDER BY owned."setName"`,
+      collectionId,
+      userId,
+    );
 
-    // Get cards owned in this collection grouped by set
-    const ownedCards = await prisma.collectionCard.findMany({
-      where: { collectionId },
-      select: { card: { select: { setName: true } } },
-    });
-    const ownedBySet = new Map<string, number>();
-    for (const cc of ownedCards) {
-      if (cc.card.setName) {
-        ownedBySet.set(cc.card.setName, (ownedBySet.get(cc.card.setName) ?? 0) + 1);
-      }
-    }
-
-    // Get total cards per set for this game type
-    const setNames = Array.from(ownedBySet.keys());
-    if (setNames.length === 0) {
-      return { success: true, data: [] };
-    }
-
-    const setCounts = await prisma.card.groupBy({
-      by: ["setName"],
-      where: {
-        gameType: collection.gameType,
-        setName: { in: setNames },
-      },
-      _count: { id: true },
-    });
-
-    const completion = setCounts
-      .filter((sc) => sc.setName !== null)
-      .map((sc) => ({
-        setName: sc.setName as string,
-        owned: ownedBySet.get(sc.setName as string) ?? 0,
-        total: sc._count.id,
-      }))
-      .sort((a, b) => a.setName.localeCompare(b.setName));
-
-    return { success: true, data: completion };
+    return { success: true, data: rows };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to fetch set completion") };
   }

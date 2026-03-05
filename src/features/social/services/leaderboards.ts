@@ -1,10 +1,11 @@
 import { prisma } from "@/shared/lib/prisma";
+import { cached } from "@/shared/lib/cache";
 import type { Result } from "@/shared/types";
 import type { LeaderboardCategory, LeaderboardEntry } from "../types";
 
 const LIMIT = 25;
 
-export async function getLeaderboard(
+async function getLeaderboardUncached(
   category: LeaderboardCategory,
 ): Promise<Result<LeaderboardEntry[]>> {
   try {
@@ -29,6 +30,8 @@ export async function getLeaderboard(
     };
   }
 }
+
+export const getLeaderboard = cached(getLeaderboardUncached, ["leaderboards"], { revalidate: 300 });
 
 async function portfolioLeaderboard(): Promise<LeaderboardEntry[]> {
   // Single aggregated query instead of N+1 fetching all users + their collections
@@ -129,26 +132,29 @@ async function achievementsLeaderboard(): Promise<LeaderboardEntry[]> {
 }
 
 async function tradesLeaderboard(): Promise<LeaderboardEntry[]> {
-  const users = await prisma.user.findMany({
-    where: { isPublic: true },
-    select: {
-      id: true,
-      name: true,
-      image: true,
-      _count: { select: { salesMade: true, purchases: true } },
-    },
-  });
+  const rows = await prisma.$queryRawUnsafe<
+    { id: string; name: string | null; image: string | null; value: number }[]
+  >(`
+    SELECT u.id, u.name, u.image,
+           (COALESCE(s.cnt, 0) + COALESCE(b.cnt, 0))::int as value
+    FROM "User" u
+    LEFT JOIN (
+      SELECT "sellerId", COUNT(*)::int as cnt FROM "Transaction" GROUP BY "sellerId"
+    ) s ON s."sellerId" = u.id
+    LEFT JOIN (
+      SELECT "buyerId", COUNT(*)::int as cnt FROM "Transaction" GROUP BY "buyerId"
+    ) b ON b."buyerId" = u.id
+    WHERE u."isPublic" = true
+      AND (COALESCE(s.cnt, 0) + COALESCE(b.cnt, 0)) > 0
+    ORDER BY value DESC
+    LIMIT ${LIMIT}
+  `);
 
-  const ranked = users
-    .map((u) => ({
-      userId: u.id,
-      userName: u.name,
-      userImage: u.image,
-      value: u._count.salesMade + u._count.purchases,
-    }))
-    .filter((e) => e.value > 0)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, LIMIT);
-
-  return ranked.map((e, i) => ({ ...e, rank: i + 1 }));
+  return rows.map((r, i) => ({
+    rank: i + 1,
+    userId: r.id,
+    userName: r.name,
+    userImage: r.image,
+    value: Number(r.value),
+  }));
 }

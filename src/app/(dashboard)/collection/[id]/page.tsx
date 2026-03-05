@@ -18,13 +18,17 @@ import { AddCardDialog } from "./add-card-dialog";
 
 export default async function CollectionDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const { id } = await params;
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
 
   const collectionResult = await getCollectionById(id, session.user.id);
   if (!collectionResult.success) notFound();
@@ -32,17 +36,15 @@ export default async function CollectionDetailPage({
   const collection = collectionResult.data;
 
   const [cardsResult, completionResult] = await Promise.all([
-    getCollectionCards(id, session.user.id),
+    getCollectionCards(id, session.user.id, page),
     getSetCompletion(id, session.user.id),
   ]);
-  const cards = cardsResult.success ? cardsResult.data : [];
+  const cardsData = cardsResult.success
+    ? cardsResult.data
+    : { cards: [], total: 0, page: 1, totalPages: 1, collectionValue: 0 };
   const completion = completionResult.success ? completionResult.data : [];
 
-  // Calculate collection value
-  const collectionValue = cards.reduce((sum, cc) => {
-    const price = cc.card.marketPrice ? Number(cc.card.marketPrice) : 0;
-    return sum + price * cc.quantity;
-  }, 0);
+  const collectionValue = cardsData.collectionValue;
 
   return (
     <div className="space-y-6">
@@ -118,7 +120,25 @@ export default async function CollectionDetailPage({
         </Card>
       )}
 
-      <CollectionCardList cards={cards} collectionId={id} />
+      <CollectionCardList cards={cardsData.cards} collectionId={id} />
+
+      {cardsData.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          {page > 1 && (
+            <Link href={`/collection/${id}?page=${page - 1}`}>
+              <Button variant="outline" size="sm">&larr; Previous</Button>
+            </Link>
+          )}
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {cardsData.totalPages} ({cardsData.total} cards)
+          </span>
+          {page < cardsData.totalPages && (
+            <Link href={`/collection/${id}?page=${page + 1}`}>
+              <Button variant="outline" size="sm">Next &rarr;</Button>
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }

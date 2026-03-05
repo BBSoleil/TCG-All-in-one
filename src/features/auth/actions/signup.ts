@@ -29,16 +29,20 @@ export async function signup(
 
   const { name, email, password } = parsed.data;
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) {
-    return { error: "An account with this email already exists" };
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return { error: "An account with this email already exists" };
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await prisma.user.create({
+      data: { name, email, passwordHash },
+    });
+
+    return { success: true };
+  } catch {
+    return { error: "Something went wrong. Please try again." };
   }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  await prisma.user.create({
-    data: { name, email, passwordHash },
-  });
-
-  return { success: true };
 }

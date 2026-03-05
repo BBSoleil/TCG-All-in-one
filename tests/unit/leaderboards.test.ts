@@ -59,17 +59,16 @@ describe("getLeaderboard", () => {
   });
 
   it("returns trades leaderboard combining sales and purchases", async () => {
-    mockPrisma.user.findMany.mockResolvedValue([
-      { id: "u1", name: "Trader", image: null, _count: { salesMade: 10, purchases: 5 } },
-      { id: "u2", name: "Buyer", image: null, _count: { salesMade: 0, purchases: 3 } },
-      { id: "u3", name: "Lurker", image: null, _count: { salesMade: 0, purchases: 0 } },
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([
+      { id: "u1", name: "Trader", image: null, value: 15 },
+      { id: "u2", name: "Buyer", image: null, value: 3 },
     ]);
 
     const result = await getLeaderboard("trades");
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toHaveLength(2); // Lurker filtered out
+      expect(result.data).toHaveLength(2);
       expect(result.data[0]?.value).toBe(15);
       expect(result.data[1]?.value).toBe(3);
     }

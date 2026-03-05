@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { ThemeToggle } from "@/shared/components/theme-toggle";
 import { NavLinks } from "@/shared/components";
 
-export function MobileNav({ userName }: { userName: string }) {
+export function MobileNav() {
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? "User";
   const [open, setOpen] = useState(false);
   return (
     <div className="md:hidden">

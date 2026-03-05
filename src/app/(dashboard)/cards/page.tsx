@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { auth } from "@/auth";
 import { searchCards, getSetsForGame } from "@/features/cards/services";
-import { getSavedSearches } from "@/features/cards/services/saved-searches";
 import {
   CardGrid,
   CardSearchFilters,
@@ -12,10 +10,14 @@ import {
   SetGrid,
   CardBreadcrumb,
 } from "@/features/cards/components";
-import { SavedSearches } from "@/features/cards/components/saved-searches";
 import { Button } from "@/components/ui/button";
 import type { GameType } from "@/shared/types";
 import type { GameSpecificFilters, SortBy } from "@/features/cards/types";
+import dynamic from "next/dynamic";
+
+const SavedSearchesWrapper = dynamic(
+  () => import("@/features/cards/components/saved-searches-wrapper").then((m) => ({ default: m.SavedSearchesWrapper })),
+);
 
 export const metadata: Metadata = {
   title: "Card Browser | TCG All-in-One",
@@ -57,12 +59,6 @@ export default async function CardsPage({
   const hasGameFilters = Object.values(gameFilters).some((v) => v !== undefined);
   const showCardList = Boolean(query || setName || rarity || hasGameFilters);
 
-  const session = await auth();
-  const savedSearchesResult = session?.user?.id
-    ? await getSavedSearches(session.user.id)
-    : null;
-  const savedSearches = savedSearchesResult?.success ? savedSearchesResult.data : [];
-
   if (showCardList) {
     const result = await searchCards({
       query,
@@ -99,7 +95,7 @@ export default async function CardsPage({
         <GameTabs activeGame={gameType} />
 
         <Suspense>
-          <SavedSearches searches={savedSearches} />
+          <SavedSearchesWrapper />
         </Suspense>
 
         <CardBreadcrumb gameType={gameType} setName={setName} />
@@ -144,7 +140,7 @@ export default async function CardsPage({
       <GameTabs activeGame={gameType} />
 
       <Suspense>
-        <SavedSearches searches={savedSearches} />
+        <SavedSearchesWrapper />
       </Suspense>
 
       <Suspense>

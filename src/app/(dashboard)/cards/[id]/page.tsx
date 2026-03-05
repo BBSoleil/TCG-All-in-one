@@ -7,6 +7,7 @@ import { getPriceHistory } from "@/features/cards/services/price-history";
 import { browseListings } from "@/features/market/services/listings";
 import dynamic from "next/dynamic";
 
+
 const PriceHistoryChart = dynamic(
   () => import("@/features/cards/components/price-history-chart").then((m) => ({ default: m.PriceHistoryChart })),
 );
