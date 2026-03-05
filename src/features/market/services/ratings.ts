@@ -99,16 +99,16 @@ export async function getWishlistMatches(
       orderBy: { price: "asc" },
     });
 
-    // Build seller ratings
+    // Batch fetch seller ratings in single query
     const sellerIds = [...new Set(listings.map((l) => l.userId))];
-    const ratingMap = new Map<string, number | null>();
-    for (const sid of sellerIds) {
-      const agg = await prisma.userRating.aggregate({
-        where: { rateeId: sid },
-        _avg: { score: true },
-      });
-      ratingMap.set(sid, agg._avg.score);
-    }
+    const ratingAggs = await prisma.userRating.groupBy({
+      by: ["rateeId"],
+      where: { rateeId: { in: sellerIds } },
+      _avg: { score: true },
+    });
+    const ratingMap = new Map<string, number | null>(
+      ratingAggs.map((r) => [r.rateeId, r._avg.score]),
+    );
 
     // Map wishlist card IDs to their target prices
     const wishlistMap = new Map(

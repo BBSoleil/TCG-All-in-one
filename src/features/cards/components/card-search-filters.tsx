@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,10 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { PokemonFilters } from "./pokemon-filters";
-import { YugiohFilters } from "./yugioh-filters";
-import { MtgFilters } from "./mtg-filters";
-import { OnepieceFilters } from "./onepiece-filters";
+
+const GAME_FILTERS = {
+  POKEMON: dynamic(() => import("./pokemon-filters").then((m) => ({ default: m.PokemonFilters }))),
+  YUGIOH: dynamic(() => import("./yugioh-filters").then((m) => ({ default: m.YugiohFilters }))),
+  MTG: dynamic(() => import("./mtg-filters").then((m) => ({ default: m.MtgFilters }))),
+  ONEPIECE: dynamic(() => import("./onepiece-filters").then((m) => ({ default: m.OnepieceFilters }))),
+} as const;
 
 const RARITIES = [
   { value: "all", label: "All rarities" },
@@ -162,10 +166,10 @@ export function CardSearchFilters({
         </div>
       </div>
 
-      {gameType === "POKEMON" && <PokemonFilters />}
-      {gameType === "YUGIOH" && <YugiohFilters />}
-      {gameType === "MTG" && <MtgFilters />}
-      {gameType === "ONEPIECE" && <OnepieceFilters />}
+      {gameType && gameType in GAME_FILTERS && (() => {
+        const FilterComponent = GAME_FILTERS[gameType as keyof typeof GAME_FILTERS];
+        return <FilterComponent />;
+      })()}
     </div>
   );
 }

@@ -4,15 +4,13 @@ import { recordPortfolioSnapshot, getPortfolioHistory } from "@/features/collect
 
 describe("recordPortfolioSnapshot", () => {
   beforeEach(() => {
-    mockPrisma.collectionCard.findMany.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
     mockPrisma.portfolioSnapshot.create.mockReset();
   });
 
   it("records snapshot with correct value and card count", async () => {
-    mockPrisma.collectionCard.findMany.mockResolvedValue([
-      { quantity: 3, card: { marketPrice: 10 } },
-      { quantity: 1, card: { marketPrice: 25 } },
-      { quantity: 2, card: { marketPrice: null } },
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([
+      { totalValue: 55, cardCount: 6 },
     ]);
     mockPrisma.portfolioSnapshot.create.mockResolvedValue({ id: "snap-1" });
 
@@ -22,14 +20,16 @@ describe("recordPortfolioSnapshot", () => {
     expect(mockPrisma.portfolioSnapshot.create).toHaveBeenCalledWith({
       data: {
         userId: "user-1",
-        value: 55, // 3*10 + 1*25
-        cardCount: 6, // 3 + 1 + 2
+        value: 55,
+        cardCount: 6,
       },
     });
   });
 
   it("records zero values for empty collection", async () => {
-    mockPrisma.collectionCard.findMany.mockResolvedValue([]);
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([
+      { totalValue: 0, cardCount: 0 },
+    ]);
     mockPrisma.portfolioSnapshot.create.mockResolvedValue({ id: "snap-2" });
 
     const result = await recordPortfolioSnapshot("empty-user");

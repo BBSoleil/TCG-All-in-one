@@ -58,33 +58,28 @@ async function portfolioLeaderboard(): Promise<LeaderboardEntry[]> {
 }
 
 async function cardsLeaderboard(): Promise<LeaderboardEntry[]> {
-  const users = await prisma.user.findMany({
-    where: { isPublic: true },
-    select: {
-      id: true,
-      name: true,
-      image: true,
-      collections: {
-        select: {
-          cards: { select: { quantity: true } },
-        },
-      },
-    },
-  });
+  const rows = await prisma.$queryRawUnsafe<
+    { id: string; name: string | null; image: string | null; value: number }[]
+  >(`
+    SELECT u.id, u.name, u.image,
+           COALESCE(SUM(cc.quantity), 0)::int as value
+    FROM "User" u
+    JOIN "Collection" col ON col."userId" = u.id
+    JOIN "CollectionCard" cc ON cc."collectionId" = col.id
+    WHERE u."isPublic" = true
+    GROUP BY u.id
+    HAVING SUM(cc.quantity) > 0
+    ORDER BY value DESC
+    LIMIT ${LIMIT}
+  `);
 
-  const ranked = users
-    .map((u) => {
-      const value = u.collections.reduce(
-        (sum, col) => sum + col.cards.reduce((s, cc) => s + cc.quantity, 0),
-        0,
-      );
-      return { userId: u.id, userName: u.name, userImage: u.image, value };
-    })
-    .filter((e) => e.value > 0)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, LIMIT);
-
-  return ranked.map((e, i) => ({ ...e, rank: i + 1 }));
+  return rows.map((r, i) => ({
+    rank: i + 1,
+    userId: r.id,
+    userName: r.name,
+    userImage: r.image,
+    value: Number(r.value),
+  }));
 }
 
 async function followersLeaderboard(): Promise<LeaderboardEntry[]> {

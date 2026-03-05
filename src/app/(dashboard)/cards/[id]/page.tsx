@@ -5,7 +5,11 @@ import Link from "next/link";
 import { getCardById } from "@/features/cards/services";
 import { getPriceHistory } from "@/features/cards/services/price-history";
 import { browseListings } from "@/features/market/services/listings";
-import { PriceHistoryChart } from "@/features/cards/components/price-history-chart";
+import dynamic from "next/dynamic";
+
+const PriceHistoryChart = dynamic(
+  () => import("@/features/cards/components/price-history-chart").then((m) => ({ default: m.PriceHistoryChart })),
+);
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

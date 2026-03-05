@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { memo, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { GAME_COLORS } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import type { CardListItem } from "@/features/cards/types";
 
-export function CardGridTile({ card }: { card: CardListItem }) {
+export const CardGridTile = memo(function CardGridTile({ card }: { card: CardListItem }) {
   const [isPending, startTransition] = useTransition();
 
   function handleWishlist(e: React.MouseEvent) {
@@ -116,4 +116,4 @@ export function CardGridTile({ card }: { card: CardListItem }) {
       </div>
     </div>
   );
-}
+});

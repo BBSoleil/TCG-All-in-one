@@ -224,6 +224,7 @@ model CollectionCard {
 
   @@unique([collectionId, cardId])
   @@index([collectionId])
+  @@index([cardId])
   @@map("collection_cards")
 }
 
@@ -240,6 +241,7 @@ model WishlistCard {
 
   @@unique([userId, cardId])
   @@index([userId])
+  @@index([cardId])
   @@map("wishlist_cards")
 }
 
@@ -316,6 +318,7 @@ model DeckCard {
 
   @@unique([deckId, cardId, isSideboard])
   @@index([deckId])
+  @@index([cardId])
   @@map("deck_cards")
 }
 
@@ -354,6 +357,8 @@ model Listing {
   @@index([userId])
   @@index([cardId])
   @@index([status])
+  @@index([userId, status])
+  @@index([cardId, status])
   @@map("listings")
 }
 
@@ -391,6 +396,7 @@ model Transaction {
 
   @@index([sellerId])
   @@index([buyerId])
+  @@index([listingId])
   @@map("transactions")
 }
 

@@ -198,12 +198,16 @@ export async function browseListings(
       prisma.listing.count({ where }),
     ]);
 
-    // Batch fetch seller ratings
+    // Batch fetch seller ratings in single query
     const sellerIds = [...new Set(listings.map((l) => l.userId))];
-    const ratingMap = new Map<string, number | null>();
-    for (const sid of sellerIds) {
-      ratingMap.set(sid, await getSellerRating(sid));
-    }
+    const ratingAggs = await prisma.userRating.groupBy({
+      by: ["rateeId"],
+      where: { rateeId: { in: sellerIds } },
+      _avg: { score: true },
+    });
+    const ratingMap = new Map<string, number | null>(
+      ratingAggs.map((r) => [r.rateeId, r._avg.score]),
+    );
 
     return {
       success: true,

@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getDashboardStats } from "@/features/collection/services";
 import { recordPortfolioSnapshot, getPortfolioHistory } from "@/features/collection/services/portfolio-history";
-import { PortfolioChart } from "@/features/collection/components";
+import dynamic from "next/dynamic";
+
+const PortfolioChart = dynamic(
+  () => import("@/features/collection/components").then((m) => ({ default: m.PortfolioChart })),
+);
 import { GAME_LABELS } from "@/shared/types";
 import {
   Card,

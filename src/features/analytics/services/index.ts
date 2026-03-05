@@ -4,83 +4,84 @@ import type { AnalyticsData, GameBreakdown, RarityBreakdown, TopCard } from "../
 
 export async function getAnalytics(userId: string): Promise<Result<AnalyticsData>> {
   try {
-    const collectionCards = await prisma.collectionCard.findMany({
-      where: { collection: { userId } },
-      select: {
-        quantity: true,
-        card: {
-          select: {
-            id: true,
-            name: true,
-            gameType: true,
-            setName: true,
-            rarity: true,
-            imageUrl: true,
-            marketPrice: true,
-          },
-        },
-      },
-    });
+    // Run all aggregations in parallel via raw SQL
+    const [gameRows, rarityRows, topCardRows, summaryRows, collectionsCount] = await Promise.all([
+      // Game breakdown
+      prisma.$queryRawUnsafe<{ gameType: string; cardCount: number; totalValue: number }[]>(`
+        SELECT c."gameType" as "gameType",
+               SUM(cc.quantity)::int as "cardCount",
+               COALESCE(SUM(cc.quantity * c."marketPrice"), 0)::float as "totalValue"
+        FROM "CollectionCard" cc
+        JOIN "Card" c ON c.id = cc."cardId"
+        JOIN "Collection" col ON col.id = cc."collectionId"
+        WHERE col."userId" = $1
+        GROUP BY c."gameType"
+        ORDER BY "totalValue" DESC
+      `, userId),
+      // Rarity breakdown
+      prisma.$queryRawUnsafe<{ rarity: string; count: number }[]>(`
+        SELECT COALESCE(c.rarity::text, 'Unknown') as rarity,
+               SUM(cc.quantity)::int as count
+        FROM "CollectionCard" cc
+        JOIN "Card" c ON c.id = cc."cardId"
+        JOIN "Collection" col ON col.id = cc."collectionId"
+        WHERE col."userId" = $1
+        GROUP BY c.rarity
+        ORDER BY count DESC
+      `, userId),
+      // Top 10 cards by total value
+      prisma.$queryRawUnsafe<{ id: string; name: string; gameType: string; setName: string | null; imageUrl: string | null; marketPrice: number; quantity: number; totalValue: number }[]>(`
+        SELECT c.id, c.name, c."gameType" as "gameType", c."setName" as "setName",
+               c."imageUrl" as "imageUrl", c."marketPrice"::float as "marketPrice",
+               SUM(cc.quantity)::int as quantity,
+               (SUM(cc.quantity) * c."marketPrice")::float as "totalValue"
+        FROM "CollectionCard" cc
+        JOIN "Card" c ON c.id = cc."cardId"
+        JOIN "Collection" col ON col.id = cc."collectionId"
+        WHERE col."userId" = $1 AND c."marketPrice" IS NOT NULL AND c."marketPrice" > 0
+        GROUP BY c.id
+        ORDER BY "totalValue" DESC
+        LIMIT 10
+      `, userId),
+      // Summary stats
+      prisma.$queryRawUnsafe<{ totalCardCopies: number; totalUniqueCards: number; totalValue: number }[]>(`
+        SELECT
+          COALESCE(SUM(cc.quantity), 0)::int as "totalCardCopies",
+          COUNT(DISTINCT cc."cardId")::int as "totalUniqueCards",
+          COALESCE(SUM(cc.quantity * c."marketPrice"), 0)::float as "totalValue"
+        FROM "CollectionCard" cc
+        JOIN "Card" c ON c.id = cc."cardId"
+        JOIN "Collection" col ON col.id = cc."collectionId"
+        WHERE col."userId" = $1
+      `, userId),
+      prisma.collection.count({ where: { userId } }),
+    ]);
 
-    const collectionsCount = await prisma.collection.count({ where: { userId } });
+    const gameBreakdown: GameBreakdown[] = gameRows.map((r) => ({
+      gameType: r.gameType,
+      cardCount: Number(r.cardCount),
+      totalValue: Number(r.totalValue),
+    }));
 
-    // Game breakdown
-    const gameMap = new Map<string, { cardCount: number; totalValue: number }>();
-    for (const cc of collectionCards) {
-      const game = cc.card.gameType;
-      const price = cc.card.marketPrice ? Number(cc.card.marketPrice) : 0;
-      const existing = gameMap.get(game) ?? { cardCount: 0, totalValue: 0 };
-      existing.cardCount += cc.quantity;
-      existing.totalValue += price * cc.quantity;
-      gameMap.set(game, existing);
-    }
-    const gameBreakdown: GameBreakdown[] = Array.from(gameMap.entries())
-      .map(([gameType, data]) => ({ gameType, ...data }))
-      .sort((a, b) => b.totalValue - a.totalValue);
+    const rarityBreakdown: RarityBreakdown[] = rarityRows.map((r) => ({
+      rarity: r.rarity,
+      count: Number(r.count),
+    }));
 
-    // Rarity breakdown
-    const rarityMap = new Map<string, number>();
-    for (const cc of collectionCards) {
-      const rarity = cc.card.rarity ?? "Unknown";
-      rarityMap.set(rarity, (rarityMap.get(rarity) ?? 0) + cc.quantity);
-    }
-    const rarityBreakdown: RarityBreakdown[] = Array.from(rarityMap.entries())
-      .map(([rarity, count]) => ({ rarity, count }))
-      .sort((a, b) => b.count - a.count);
+    const topCards: TopCard[] = topCardRows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      gameType: r.gameType,
+      setName: r.setName,
+      imageUrl: r.imageUrl,
+      marketPrice: Number(r.marketPrice),
+      quantity: Number(r.quantity),
+      totalValue: Number(r.totalValue),
+    }));
 
-    // Top cards by total value
-    const cardValueMap = new Map<string, TopCard>();
-    for (const cc of collectionCards) {
-      const price = cc.card.marketPrice ? Number(cc.card.marketPrice) : 0;
-      if (price === 0) continue;
-      const existing = cardValueMap.get(cc.card.id);
-      if (existing) {
-        existing.quantity += cc.quantity;
-        existing.totalValue += price * cc.quantity;
-      } else {
-        cardValueMap.set(cc.card.id, {
-          id: cc.card.id,
-          name: cc.card.name,
-          gameType: cc.card.gameType,
-          setName: cc.card.setName,
-          imageUrl: cc.card.imageUrl,
-          marketPrice: price,
-          quantity: cc.quantity,
-          totalValue: price * cc.quantity,
-        });
-      }
-    }
-    const topCards = Array.from(cardValueMap.values())
-      .sort((a, b) => b.totalValue - a.totalValue)
-      .slice(0, 10);
-
-    // Summary stats
-    const totalCardCopies = collectionCards.reduce((sum, cc) => sum + cc.quantity, 0);
-    const totalUniqueCards = new Set(collectionCards.map((cc) => cc.card.id)).size;
-    const totalValue = collectionCards.reduce((sum, cc) => {
-      const price = cc.card.marketPrice ? Number(cc.card.marketPrice) : 0;
-      return sum + price * cc.quantity;
-    }, 0);
+    const summary = summaryRows[0] ?? { totalCardCopies: 0, totalUniqueCards: 0, totalValue: 0 };
+    const totalCardCopies = Number(summary.totalCardCopies);
+    const totalValue = Number(summary.totalValue);
     const avgCardValue = totalCardCopies > 0 ? totalValue / totalCardCopies : 0;
 
     return {
@@ -89,7 +90,7 @@ export async function getAnalytics(userId: string): Promise<Result<AnalyticsData
         gameBreakdown,
         rarityBreakdown,
         topCards,
-        totalUniqueCards,
+        totalUniqueCards: Number(summary.totalUniqueCards),
         totalCardCopies,
         totalValue,
         avgCardValue,

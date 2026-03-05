@@ -11,23 +11,22 @@ export async function recordPortfolioSnapshot(
   userId: string,
 ): Promise<Result<void>> {
   try {
-    const collectionCards = await prisma.collectionCard.findMany({
-      where: { collection: { userId } },
-      select: {
-        quantity: true,
-        card: { select: { marketPrice: true } },
-      },
-    });
+    const rows = await prisma.$queryRawUnsafe<
+      { totalValue: number; cardCount: number }[]
+    >(`
+      SELECT
+        COALESCE(SUM(cc.quantity * c."marketPrice"), 0)::float as "totalValue",
+        COALESCE(SUM(cc.quantity), 0)::int as "cardCount"
+      FROM "CollectionCard" cc
+      JOIN "Card" c ON c.id = cc."cardId"
+      JOIN "Collection" col ON col.id = cc."collectionId"
+      WHERE col."userId" = $1
+    `, userId);
 
-    const value = collectionCards.reduce((sum, cc) => {
-      const price = cc.card.marketPrice ? Number(cc.card.marketPrice) : 0;
-      return sum + price * cc.quantity;
-    }, 0);
-
-    const cardCount = collectionCards.reduce((sum, cc) => sum + cc.quantity, 0);
+    const { totalValue, cardCount } = rows[0] ?? { totalValue: 0, cardCount: 0 };
 
     await prisma.portfolioSnapshot.create({
-      data: { userId, value, cardCount },
+      data: { userId, value: totalValue, cardCount },
     });
 
     return { success: true, data: undefined };

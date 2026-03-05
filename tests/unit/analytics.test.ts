@@ -1,30 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-
-vi.mock("@/shared/lib/prisma", () => ({
-  prisma: {
-    collectionCard: {
-      findMany: vi.fn(),
-    },
-    collection: {
-      count: vi.fn(),
-    },
-  },
-}));
-
-import { prisma } from "@/shared/lib/prisma";
+import { mockPrisma } from "../helpers/mock-prisma";
 import { getAnalytics } from "@/features/analytics/services";
-
-const mockCollectionCardFindMany = prisma.collectionCard.findMany as ReturnType<typeof vi.fn>;
-const mockCollectionCount = prisma.collection.count as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockCollectionCount.mockResolvedValue(2);
 });
 
 describe("getAnalytics", () => {
   it("returns empty data for user with no cards", async () => {
-    mockCollectionCardFindMany.mockResolvedValue([]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([]) // game breakdown
+      .mockResolvedValueOnce([]) // rarity breakdown
+      .mockResolvedValueOnce([]) // top cards
+      .mockResolvedValueOnce([{ totalCardCopies: 0, totalUniqueCards: 0, totalValue: 0 }]); // summary
+    mockPrisma.collection.count.mockResolvedValue(2);
 
     const result = await getAnalytics("user-1");
     expect(result.success).toBe(true);
@@ -39,11 +28,15 @@ describe("getAnalytics", () => {
   });
 
   it("calculates game breakdown correctly", async () => {
-    mockCollectionCardFindMany.mockResolvedValue([
-      { quantity: 3, card: { id: "c1", name: "Pikachu", gameType: "POKEMON", setName: "Base", rarity: "COMMON", imageUrl: null, marketPrice: 5 } },
-      { quantity: 1, card: { id: "c2", name: "Charizard", gameType: "POKEMON", setName: "Base", rarity: "RARE", imageUrl: null, marketPrice: 100 } },
-      { quantity: 2, card: { id: "c3", name: "Dark Magician", gameType: "YUGIOH", setName: "LOB", rarity: "ULTRA_RARE", imageUrl: null, marketPrice: 20 } },
-    ]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([
+        { gameType: "POKEMON", cardCount: 4, totalValue: 115 },
+        { gameType: "YUGIOH", cardCount: 2, totalValue: 40 },
+      ]) // game breakdown
+      .mockResolvedValueOnce([]) // rarity
+      .mockResolvedValueOnce([]) // top cards
+      .mockResolvedValueOnce([{ totalCardCopies: 6, totalUniqueCards: 3, totalValue: 155 }]); // summary
+    mockPrisma.collection.count.mockResolvedValue(2);
 
     const result = await getAnalytics("user-1");
     expect(result.success).toBe(true);
@@ -52,48 +45,60 @@ describe("getAnalytics", () => {
     expect(result.data.gameBreakdown).toHaveLength(2);
     const pokemon = result.data.gameBreakdown.find((g) => g.gameType === "POKEMON");
     expect(pokemon).toBeDefined();
-    expect(pokemon?.cardCount).toBe(4); // 3 + 1
-    expect(pokemon?.totalValue).toBe(115); // 3*5 + 1*100
+    expect(pokemon?.cardCount).toBe(4);
+    expect(pokemon?.totalValue).toBe(115);
   });
 
   it("calculates rarity breakdown correctly", async () => {
-    mockCollectionCardFindMany.mockResolvedValue([
-      { quantity: 2, card: { id: "c1", name: "A", gameType: "POKEMON", setName: null, rarity: "COMMON", imageUrl: null, marketPrice: null } },
-      { quantity: 1, card: { id: "c2", name: "B", gameType: "POKEMON", setName: null, rarity: "COMMON", imageUrl: null, marketPrice: null } },
-      { quantity: 1, card: { id: "c3", name: "C", gameType: "POKEMON", setName: null, rarity: "RARE", imageUrl: null, marketPrice: null } },
-    ]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([]) // game
+      .mockResolvedValueOnce([
+        { rarity: "COMMON", count: 3 },
+        { rarity: "RARE", count: 1 },
+      ]) // rarity breakdown
+      .mockResolvedValueOnce([]) // top cards
+      .mockResolvedValueOnce([{ totalCardCopies: 4, totalUniqueCards: 3, totalValue: 0 }]); // summary
+    mockPrisma.collection.count.mockResolvedValue(2);
 
     const result = await getAnalytics("user-1");
     expect(result.success).toBe(true);
     if (!result.success) return;
 
     const common = result.data.rarityBreakdown.find((r) => r.rarity === "COMMON");
-    expect(common?.count).toBe(3); // 2 + 1
+    expect(common?.count).toBe(3);
     const rare = result.data.rarityBreakdown.find((r) => r.rarity === "RARE");
     expect(rare?.count).toBe(1);
   });
 
   it("returns top cards sorted by total value", async () => {
-    mockCollectionCardFindMany.mockResolvedValue([
-      { quantity: 1, card: { id: "c1", name: "Cheap", gameType: "MTG", setName: null, rarity: "COMMON", imageUrl: null, marketPrice: 1 } },
-      { quantity: 4, card: { id: "c2", name: "Expensive", gameType: "MTG", setName: null, rarity: "RARE", imageUrl: null, marketPrice: 50 } },
-      { quantity: 2, card: { id: "c3", name: "Mid", gameType: "MTG", setName: null, rarity: "UNCOMMON", imageUrl: null, marketPrice: 10 } },
-    ]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([]) // game
+      .mockResolvedValueOnce([]) // rarity
+      .mockResolvedValueOnce([
+        { id: "c2", name: "Expensive", gameType: "MTG", setName: null, imageUrl: null, marketPrice: 50, quantity: 4, totalValue: 200 },
+        { id: "c3", name: "Mid", gameType: "MTG", setName: null, imageUrl: null, marketPrice: 10, quantity: 2, totalValue: 20 },
+        { id: "c1", name: "Cheap", gameType: "MTG", setName: null, imageUrl: null, marketPrice: 1, quantity: 1, totalValue: 1 },
+      ]) // top cards
+      .mockResolvedValueOnce([{ totalCardCopies: 7, totalUniqueCards: 3, totalValue: 221 }]); // summary
+    mockPrisma.collection.count.mockResolvedValue(2);
 
     const result = await getAnalytics("user-1");
     expect(result.success).toBe(true);
     if (!result.success) return;
 
     expect(result.data.topCards[0]?.name).toBe("Expensive");
-    expect(result.data.topCards[0]?.totalValue).toBe(200); // 4 * 50
+    expect(result.data.topCards[0]?.totalValue).toBe(200);
     expect(result.data.topCards[1]?.name).toBe("Mid");
     expect(result.data.topCards[2]?.name).toBe("Cheap");
   });
 
   it("handles null marketPrice cards", async () => {
-    mockCollectionCardFindMany.mockResolvedValue([
-      { quantity: 5, card: { id: "c1", name: "Free", gameType: "POKEMON", setName: null, rarity: null, imageUrl: null, marketPrice: null } },
-    ]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([{ gameType: "POKEMON", cardCount: 5, totalValue: 0 }]) // game
+      .mockResolvedValueOnce([{ rarity: "Unknown", count: 5 }]) // rarity
+      .mockResolvedValueOnce([]) // top cards (no priced cards)
+      .mockResolvedValueOnce([{ totalCardCopies: 5, totalUniqueCards: 1, totalValue: 0 }]); // summary
+    mockPrisma.collection.count.mockResolvedValue(2);
 
     const result = await getAnalytics("user-1");
     expect(result.success).toBe(true);
@@ -101,25 +106,27 @@ describe("getAnalytics", () => {
 
     expect(result.data.totalValue).toBe(0);
     expect(result.data.avgCardValue).toBe(0);
-    expect(result.data.topCards).toHaveLength(0); // excluded from top cards
+    expect(result.data.topCards).toHaveLength(0);
     expect(result.data.totalCardCopies).toBe(5);
     expect(result.data.rarityBreakdown).toEqual([{ rarity: "Unknown", count: 5 }]);
   });
 
   it("calculates summary stats correctly", async () => {
-    mockCollectionCardFindMany.mockResolvedValue([
-      { quantity: 2, card: { id: "c1", name: "A", gameType: "POKEMON", setName: null, rarity: "COMMON", imageUrl: null, marketPrice: 10 } },
-      { quantity: 3, card: { id: "c2", name: "B", gameType: "POKEMON", setName: null, rarity: "RARE", imageUrl: null, marketPrice: 20 } },
-    ]);
+    mockPrisma.$queryRawUnsafe
+      .mockResolvedValueOnce([{ gameType: "POKEMON", cardCount: 5, totalValue: 80 }]) // game
+      .mockResolvedValueOnce([{ rarity: "COMMON", count: 2 }, { rarity: "RARE", count: 3 }]) // rarity
+      .mockResolvedValueOnce([]) // top cards
+      .mockResolvedValueOnce([{ totalCardCopies: 5, totalUniqueCards: 2, totalValue: 80 }]); // summary
+    mockPrisma.collection.count.mockResolvedValue(2);
 
     const result = await getAnalytics("user-1");
     expect(result.success).toBe(true);
     if (!result.success) return;
 
     expect(result.data.totalUniqueCards).toBe(2);
-    expect(result.data.totalCardCopies).toBe(5); // 2 + 3
-    expect(result.data.totalValue).toBe(80); // 2*10 + 3*20
-    expect(result.data.avgCardValue).toBe(16); // 80 / 5
+    expect(result.data.totalCardCopies).toBe(5);
+    expect(result.data.totalValue).toBe(80);
+    expect(result.data.avgCardValue).toBe(16);
     expect(result.data.collectionsCount).toBe(2);
   });
 });

@@ -3,8 +3,18 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getAnalytics } from "@/features/analytics/services";
 import { getPortfolioHistory } from "@/features/collection/services/portfolio-history";
-import { PortfolioChart } from "@/features/collection/components";
-import { GameBreakdownChart, RarityChart, TopCardsTable } from "@/features/analytics/components";
+import dynamic from "next/dynamic";
+import { TopCardsTable } from "@/features/analytics/components";
+
+const PortfolioChart = dynamic(
+  () => import("@/features/collection/components").then((m) => ({ default: m.PortfolioChart })),
+);
+const GameBreakdownChart = dynamic(
+  () => import("@/features/analytics/components").then((m) => ({ default: m.GameBreakdownChart })),
+);
+const RarityChart = dynamic(
+  () => import("@/features/analytics/components").then((m) => ({ default: m.RarityChart })),
+);
 import {
   Card,
   CardContent,
