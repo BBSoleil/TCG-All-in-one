@@ -23,7 +23,7 @@ describe("searchCards", () => {
     mockPrisma.card.findMany.mockResolvedValue(mockCards);
     mockPrisma.card.count.mockResolvedValue(1);
 
-    const result = await searchCards({ page: 1, pageSize: 20 });
+    const result = await searchCards({ query: "", page: 1, pageSize: 20 });
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -54,7 +54,7 @@ describe("searchCards", () => {
     mockPrisma.card.findMany.mockResolvedValue([]);
     mockPrisma.card.count.mockResolvedValue(0);
 
-    await searchCards({ gameType: "POKEMON" });
+    await searchCards({ query: "", gameType: "POKEMON" });
 
     expect(mockPrisma.card.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -67,7 +67,7 @@ describe("searchCards", () => {
     mockPrisma.card.findMany.mockResolvedValue([]);
     mockPrisma.card.count.mockResolvedValue(0);
 
-    await searchCards({ rarity: "RARE" });
+    await searchCards({ query: "", rarity: "RARE" });
 
     expect(mockPrisma.card.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -79,7 +79,7 @@ describe("searchCards", () => {
   it("returns error on database failure", async () => {
     mockPrisma.card.findMany.mockRejectedValue(new Error("DB connection failed"));
 
-    const result = await searchCards({ page: 1 });
+    const result = await searchCards({ query: "", page: 1 });
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -91,7 +91,7 @@ describe("searchCards", () => {
     mockPrisma.card.findMany.mockResolvedValue([]);
     mockPrisma.card.count.mockResolvedValue(45);
 
-    const result = await searchCards({ page: 1, pageSize: 20 });
+    const result = await searchCards({ query: "", page: 1, pageSize: 20 });
 
     expect(result.success).toBe(true);
     if (result.success) {
