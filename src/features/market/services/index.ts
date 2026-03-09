@@ -1,3 +1,3 @@
-export { createListing, getUserListings, getListingById, browseListings, cancelListing } from "./listings";
+export { createListing, getUserListings, getListingById, browseListings, getUserListingsByStatus, updateListingPrice, cancelListing } from "./listings";
 export { makeOffer, acceptOffer, declineOffer, withdrawOffer, getOffersOnListing, getUserOffersSent, getUserOffersReceived, getUserTransactions } from "./offers";
 export { rateTransaction, getUserRating, getWishlistMatches } from "./ratings";
