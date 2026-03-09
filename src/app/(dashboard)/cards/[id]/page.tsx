@@ -7,7 +7,6 @@ import { getPriceHistory } from "@/features/cards/services/price-history";
 import { browseListings } from "@/features/market/services/listings";
 import dynamic from "next/dynamic";
 
-
 const PriceHistoryChart = dynamic(
   () => import("@/features/cards/components/price-history-chart").then((m) => ({ default: m.PriceHistoryChart })),
 );
@@ -22,6 +21,7 @@ import {
 import { GAME_LABELS } from "@/shared/types";
 import { AddToWishlistDialog } from "./add-to-wishlist-dialog";
 import { AddToCollectionDialog } from "./add-to-collection-dialog";
+import { GameDetails } from "./game-details";
 
 export async function generateMetadata({
   params,
@@ -118,215 +118,12 @@ export default async function CardDetailPage({
             </CardContent>
           </Card>
 
-          {card.pokemonDetails && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Pokemon Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  {card.pokemonDetails.hp && (
-                    <>
-                      <dt className="text-muted-foreground">HP</dt>
-                      <dd>{card.pokemonDetails.hp}</dd>
-                    </>
-                  )}
-                  {card.pokemonDetails.types.length > 0 && (
-                    <>
-                      <dt className="text-muted-foreground">Types</dt>
-                      <dd>{card.pokemonDetails.types.join(", ")}</dd>
-                    </>
-                  )}
-                  {card.pokemonDetails.stage && (
-                    <>
-                      <dt className="text-muted-foreground">Stage</dt>
-                      <dd>{card.pokemonDetails.stage}</dd>
-                    </>
-                  )}
-                  {card.pokemonDetails.evolvesFrom && (
-                    <>
-                      <dt className="text-muted-foreground">Evolves From</dt>
-                      <dd>{card.pokemonDetails.evolvesFrom}</dd>
-                    </>
-                  )}
-                  {card.pokemonDetails.weakness && (
-                    <>
-                      <dt className="text-muted-foreground">Weakness</dt>
-                      <dd>{card.pokemonDetails.weakness}</dd>
-                    </>
-                  )}
-                  {card.pokemonDetails.resistance && (
-                    <>
-                      <dt className="text-muted-foreground">Resistance</dt>
-                      <dd>{card.pokemonDetails.resistance}</dd>
-                    </>
-                  )}
-                  {card.pokemonDetails.retreatCost !== null && (
-                    <>
-                      <dt className="text-muted-foreground">Retreat Cost</dt>
-                      <dd>{card.pokemonDetails.retreatCost}</dd>
-                    </>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          )}
-
-          {card.yugiohDetails && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Yu-Gi-Oh! Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  {card.yugiohDetails.cardType && (
-                    <>
-                      <dt className="text-muted-foreground">Type</dt>
-                      <dd>{card.yugiohDetails.cardType}</dd>
-                    </>
-                  )}
-                  {card.yugiohDetails.attribute && (
-                    <>
-                      <dt className="text-muted-foreground">Attribute</dt>
-                      <dd>{card.yugiohDetails.attribute}</dd>
-                    </>
-                  )}
-                  {card.yugiohDetails.level !== null && (
-                    <>
-                      <dt className="text-muted-foreground">Level</dt>
-                      <dd>{card.yugiohDetails.level}</dd>
-                    </>
-                  )}
-                  {card.yugiohDetails.attack !== null && (
-                    <>
-                      <dt className="text-muted-foreground">ATK / DEF</dt>
-                      <dd>
-                        {card.yugiohDetails.attack} / {card.yugiohDetails.defense}
-                      </dd>
-                    </>
-                  )}
-                  {card.yugiohDetails.race && (
-                    <>
-                      <dt className="text-muted-foreground">Race</dt>
-                      <dd>{card.yugiohDetails.race}</dd>
-                    </>
-                  )}
-                  {card.yugiohDetails.archetype && (
-                    <>
-                      <dt className="text-muted-foreground">Archetype</dt>
-                      <dd>{card.yugiohDetails.archetype}</dd>
-                    </>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          )}
-
-          {card.mtgDetails && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Magic Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  {card.mtgDetails.typeLine && (
-                    <>
-                      <dt className="text-muted-foreground">Type</dt>
-                      <dd>{card.mtgDetails.typeLine}</dd>
-                    </>
-                  )}
-                  {card.mtgDetails.manaCost && (
-                    <>
-                      <dt className="text-muted-foreground">Mana Cost</dt>
-                      <dd>{card.mtgDetails.manaCost}</dd>
-                    </>
-                  )}
-                  {card.mtgDetails.cmc !== null && (
-                    <>
-                      <dt className="text-muted-foreground">CMC</dt>
-                      <dd>{card.mtgDetails.cmc}</dd>
-                    </>
-                  )}
-                  {card.mtgDetails.colors.length > 0 && (
-                    <>
-                      <dt className="text-muted-foreground">Colors</dt>
-                      <dd>{card.mtgDetails.colors.join(", ")}</dd>
-                    </>
-                  )}
-                  {card.mtgDetails.oracleText && (
-                    <>
-                      <dt className="text-muted-foreground">Text</dt>
-                      <dd className="col-span-2 whitespace-pre-line">
-                        {card.mtgDetails.oracleText}
-                      </dd>
-                    </>
-                  )}
-                  {card.mtgDetails.power && (
-                    <>
-                      <dt className="text-muted-foreground">P/T</dt>
-                      <dd>
-                        {card.mtgDetails.power}/{card.mtgDetails.toughness}
-                      </dd>
-                    </>
-                  )}
-                  {card.mtgDetails.loyalty && (
-                    <>
-                      <dt className="text-muted-foreground">Loyalty</dt>
-                      <dd>{card.mtgDetails.loyalty}</dd>
-                    </>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          )}
-
-          {card.onepieceDetails && (
-            <Card>
-              <CardHeader>
-                <CardTitle>One Piece Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  {card.onepieceDetails.cardType && (
-                    <>
-                      <dt className="text-muted-foreground">Type</dt>
-                      <dd>{card.onepieceDetails.cardType}</dd>
-                    </>
-                  )}
-                  {card.onepieceDetails.color && (
-                    <>
-                      <dt className="text-muted-foreground">Color</dt>
-                      <dd>{card.onepieceDetails.color}</dd>
-                    </>
-                  )}
-                  {card.onepieceDetails.cost !== null && (
-                    <>
-                      <dt className="text-muted-foreground">Cost</dt>
-                      <dd>{card.onepieceDetails.cost}</dd>
-                    </>
-                  )}
-                  {card.onepieceDetails.power !== null && (
-                    <>
-                      <dt className="text-muted-foreground">Power</dt>
-                      <dd>{card.onepieceDetails.power}</dd>
-                    </>
-                  )}
-                  {card.onepieceDetails.counter !== null && (
-                    <>
-                      <dt className="text-muted-foreground">Counter</dt>
-                      <dd>{card.onepieceDetails.counter}</dd>
-                    </>
-                  )}
-                  {card.onepieceDetails.attribute && (
-                    <>
-                      <dt className="text-muted-foreground">Attribute</dt>
-                      <dd>{card.onepieceDetails.attribute}</dd>
-                    </>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          )}
+          <GameDetails
+            pokemonDetails={card.pokemonDetails}
+            yugiohDetails={card.yugiohDetails}
+            mtgDetails={card.mtgDetails}
+            onepieceDetails={card.onepieceDetails}
+          />
 
           {listings.length > 0 && (
             <Card>
