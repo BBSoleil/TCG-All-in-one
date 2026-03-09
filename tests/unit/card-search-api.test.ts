@@ -128,7 +128,7 @@ describe("GET /api/cards/sets", () => {
     const res = await setsHandler(makeRequest("/api/cards/sets?gameType=POKEMON"));
 
     expect(res.status).toBe(200);
-    expect(res.headers.get("Cache-Control")).toBe("public, s-maxage=300, stale-while-revalidate=3600");
+    expect(res.headers.get("Cache-Control")).toBe("public, s-maxage=3600, stale-while-revalidate=86400");
 
     const json = await res.json();
     expect(json).toHaveLength(1);

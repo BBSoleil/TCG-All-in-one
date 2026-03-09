@@ -162,28 +162,30 @@ export function CardBrowserClient() {
     return () => controller.abort();
   }, [paramsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Prefetch sets for other game tabs on idle
+  // Prefetch sets for other game tabs on idle (staggered to avoid burst DB load)
   useEffect(() => {
     const games = ["POKEMON", "YUGIOH", "MTG", "ONEPIECE"];
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
     const prefetch = () => {
-      for (const game of games) {
-        if (game === gameType) continue;
-        const key = `sets-${game}`;
-        if (setsCache.get(key)) continue;
-        // Fetch in background, ignore errors
-        fetch(`/api/cards/sets?gameType=${game}`)
-          .then((res) => res.ok ? res.json() as Promise<SetInfo[]> : null)
-          .then((json) => { if (json) setsCache.set(key, json); })
-          .catch(() => { /* swallow prefetch errors */ });
-      }
+      const toPrefetch = games.filter((g) => g !== gameType && !setsCache.get(`sets-${g}`));
+      toPrefetch.forEach((game, i) => {
+        const timer = setTimeout(() => {
+          fetch(`/api/cards/sets?gameType=${game}`)
+            .then((res) => res.ok ? res.json() as Promise<SetInfo[]> : null)
+            .then((json) => { if (json) setsCache.set(`sets-${game}`, json); })
+            .catch(() => { /* swallow prefetch errors */ });
+        }, i * 500);
+        timers.push(timer);
+      });
     };
 
     if (typeof requestIdleCallback !== "undefined") {
       const id = requestIdleCallback(prefetch);
-      return () => cancelIdleCallback(id);
+      return () => { cancelIdleCallback(id); timers.forEach(clearTimeout); };
     }
     const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
+    return () => { clearTimeout(id); timers.forEach(clearTimeout); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

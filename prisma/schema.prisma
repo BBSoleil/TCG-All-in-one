@@ -132,6 +132,7 @@ model Card {
   @@index([gameType, setName])
   @@index([externalId])
   @@index([marketPrice])
+  @@index([setName, setCode, gameType])
   @@map("cards")
 }
 

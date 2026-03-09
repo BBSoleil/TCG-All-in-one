@@ -87,7 +87,7 @@ async function getSetsForGameUncached(
 const getSetsForGameCached = cached(
   (gameTypeStr: string) => getSetsForGameUncached(gameTypeStr === "__all__" ? undefined : gameTypeStr as GameType),
   ["card-sets"],
-  { revalidate: 300 },
+  { revalidate: 3600 },
 );
 
 export async function getSetsForGame(
@@ -277,15 +277,3 @@ export async function searchCardsForSelect(
   return cards;
 }
 
-export async function getDistinctSets(
-  gameType?: string,
-): Promise<string[]> {
-  const where = gameType ? { gameType: gameType as PrismaGameType } : {};
-  const results = await prisma.card.findMany({
-    where: { ...where, setName: { not: null } },
-    select: { setName: true },
-    distinct: ["setName"],
-    orderBy: { setName: "asc" },
-  });
-  return results.map((r) => r.setName).filter((s): s is string => s !== null);
-}

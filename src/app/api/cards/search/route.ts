@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const rarity = params.get("rarity");
   const sortBy = params.get("sortBy") as SortBy | null;
   const page = params.get("page") ? Number(params.get("page")) : 1;
-  const pageSize = params.get("pageSize") ? Number(params.get("pageSize")) : 20;
+  const pageSize = Math.min(params.get("pageSize") ? Number(params.get("pageSize")) : 20, 100);
 
   // Build game-specific filters
   const gameFilters: GameSpecificFilters = {};
