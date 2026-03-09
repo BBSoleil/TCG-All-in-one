@@ -46,27 +46,14 @@ function createCache<T>() {
 const searchCache = createCache<CardSearchResult>();
 const setsCache = createCache<SetInfo[]>();
 
-interface CardBrowserClientProps {
-  initialData: CardSearchResult | null;
-  initialSets: SetInfo[];
-  initialSetNames: string[];
-  initialMode: "search" | "browse";
-}
-
-export function CardBrowserClient({
-  initialData,
-  initialSets,
-  initialSetNames,
-  initialMode,
-}: CardBrowserClientProps) {
+export function CardBrowserClient() {
   const searchParams = useSearchParams();
-  const [data, setData] = useState<CardSearchResult | null>(initialData);
-  const [sets, setSets] = useState<SetInfo[]>(initialSets);
-  const [setNames, setSetNames] = useState<string[]>(initialSetNames);
-  const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"search" | "browse">(initialMode);
+  const [data, setData] = useState<CardSearchResult | null>(null);
+  const [sets, setSets] = useState<SetInfo[]>([]);
+  const [setNames, setSetNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<"search" | "browse">("browse");
   const abortRef = useRef<AbortController | null>(null);
-  const isFirstRender = useRef(true);
 
   // Build a stable key from current search params
   const paramsKey = searchParams.toString();
@@ -75,7 +62,6 @@ export function CardBrowserClient({
   const query = searchParams.get("query") ?? undefined;
   const setName = searchParams.get("setName") ?? undefined;
   const rarity = searchParams.get("rarity") ?? undefined;
-  const sortBy = searchParams.get("sortBy") ?? undefined;
 
   // Determine if we're in search mode (filters applied beyond just gameType)
   const hasSearchFilters = Boolean(
@@ -130,18 +116,6 @@ export function CardBrowserClient({
   }, []);
 
   useEffect(() => {
-    // Skip the first render — we have SSR data
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      // Seed caches with SSR data
-      if (initialData && initialMode === "search") {
-        searchCache.set(paramsKey, initialData);
-      }
-      const setsKey = `sets-${gameType ?? "all"}`;
-      setsCache.set(setsKey, initialSets);
-      return;
-    }
-
     // Cancel any in-flight request
     abortRef.current?.abort();
     const controller = new AbortController();
