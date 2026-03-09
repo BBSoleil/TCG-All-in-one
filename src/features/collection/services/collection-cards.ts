@@ -1,4 +1,5 @@
 import { prisma } from "@/shared/lib/prisma";
+import type { GameType as PrismaGameType } from "@/generated/prisma/client";
 import type { Result } from "@/shared/types";
 import type { CollectionCardWithDetails, PaginatedCollectionCards } from "./index";
 
@@ -172,5 +173,78 @@ export async function removeCardFromCollection(
     return { success: true, data: undefined };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to remove card") };
+  }
+}
+
+export interface ImportRow {
+  name: string;
+  quantity: number;
+  condition: string | null;
+  notes: string | null;
+}
+
+export interface ImportResult {
+  imported: number;
+  total: number;
+  errors: string[];
+}
+
+export async function matchAndImportCards(
+  collectionId: string,
+  gameType: string,
+  rows: ImportRow[],
+  parseErrors: string[] = [],
+): Promise<Result<ImportResult>> {
+  try {
+    const cardNames = [...new Set(rows.map((r) => r.name))];
+
+    const matchedCards = await prisma.card.findMany({
+      where: {
+        gameType: gameType as PrismaGameType,
+        name: { in: cardNames, mode: "insensitive" },
+      },
+      select: { id: true, name: true },
+    });
+
+    // Build name -> card ID map (case-insensitive)
+    const nameToId = new Map<string, string>();
+    for (const card of matchedCards) {
+      nameToId.set(card.name.toLowerCase(), card.id);
+    }
+
+    let imported = 0;
+    const importErrors: string[] = [...parseErrors];
+
+    for (const row of rows) {
+      const cardId = nameToId.get(row.name.toLowerCase());
+      if (!cardId) {
+        importErrors.push(`Card not found: "${row.name}"`);
+        continue;
+      }
+
+      await prisma.collectionCard.upsert({
+        where: { collectionId_cardId: { collectionId, cardId } },
+        create: {
+          collectionId,
+          cardId,
+          quantity: row.quantity,
+          condition: row.condition,
+          notes: row.notes,
+        },
+        update: {
+          quantity: row.quantity,
+          condition: row.condition,
+          notes: row.notes,
+        },
+      });
+      imported++;
+    }
+
+    return {
+      success: true,
+      data: { imported, total: rows.length, errors: importErrors },
+    };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error : new Error("Failed to import cards") };
   }
 }

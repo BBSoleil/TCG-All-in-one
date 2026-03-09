@@ -3,7 +3,8 @@ import type { GameType as PrismaGameType } from "@/generated/prisma/client";
 import type { Result } from "@/shared/types";
 
 // Re-export split modules so all existing imports continue to work
-export { getCollectionCards, getAllCollectionCards, addCardToCollection, updateCollectionCard, removeCardFromCollection } from "./collection-cards";
+export { getCollectionCards, getAllCollectionCards, addCardToCollection, updateCollectionCard, removeCardFromCollection, matchAndImportCards } from "./collection-cards";
+export type { ImportRow, ImportResult } from "./collection-cards";
 export { getDashboardStats, getSetCompletion } from "./stats";
 
 export interface CollectionWithStats {

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { prisma } from "@/shared/lib/prisma";
 import { ProfileForm } from "@/features/auth/components";
 import { ProfileVisibilityToggle, AchievementList } from "@/features/social/components";
+import { getOwnProfile } from "@/features/social/services/profiles";
 import { getUserAchievements } from "@/features/social/services/achievements";
 import { getUserTier } from "@/features/billing/services";
 import { BillingSection } from "./billing-section";
@@ -28,16 +28,13 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const [user, achievementsResult, tierResult] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { isPublic: true, bio: true },
-    }),
+  const [profileResult, achievementsResult, tierResult] = await Promise.all([
+    getOwnProfile(session.user.id),
     getUserAchievements(session.user.id),
     getUserTier(session.user.id),
   ]);
+  const user = profileResult.success ? profileResult.data : null;
   const tier = tierResult.success ? tierResult.data.tier : "free";
-
   const achievements = achievementsResult.success ? achievementsResult.data : [];
 
   return (

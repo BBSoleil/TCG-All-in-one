@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { prisma } from "@/shared/lib/prisma";
-import { getCollectionById } from "@/features/collection/services";
+import { getCollectionById, matchAndImportCards } from "@/features/collection/services";
 import { parseCSV } from "@/features/collection/services/csv-import";
-import type { GameType as PrismaGameType } from "@/generated/prisma/client";
 
 export async function POST(
   request: Request,
@@ -45,55 +43,16 @@ export async function POST(
     return NextResponse.json({ error: "No valid rows found", parseErrors: errors }, { status: 400 });
   }
 
-  // Match card names to DB cards (by name + game type)
-  const gameType = collectionResult.data.gameType as PrismaGameType;
-  const cardNames = [...new Set(rows.map((r) => r.name))];
+  const importResult = await matchAndImportCards(
+    id,
+    collectionResult.data.gameType,
+    rows,
+    errors,
+  );
 
-  const matchedCards = await prisma.card.findMany({
-    where: {
-      gameType,
-      name: { in: cardNames, mode: "insensitive" },
-    },
-    select: { id: true, name: true },
-  });
-
-  // Build name -> card ID map (case-insensitive)
-  const nameToId = new Map<string, string>();
-  for (const card of matchedCards) {
-    nameToId.set(card.name.toLowerCase(), card.id);
+  if (!importResult.success) {
+    return NextResponse.json({ error: importResult.error.message }, { status: 500 });
   }
 
-  let imported = 0;
-  const importErrors: string[] = [...errors];
-
-  for (const row of rows) {
-    const cardId = nameToId.get(row.name.toLowerCase());
-    if (!cardId) {
-      importErrors.push(`Card not found: "${row.name}"`);
-      continue;
-    }
-
-    await prisma.collectionCard.upsert({
-      where: { collectionId_cardId: { collectionId: id, cardId } },
-      create: {
-        collectionId: id,
-        cardId,
-        quantity: row.quantity,
-        condition: row.condition,
-        notes: row.notes,
-      },
-      update: {
-        quantity: row.quantity,
-        condition: row.condition,
-        notes: row.notes,
-      },
-    });
-    imported++;
-  }
-
-  return NextResponse.json({
-    imported,
-    total: rows.length,
-    errors: importErrors,
-  });
+  return NextResponse.json(importResult.data);
 }

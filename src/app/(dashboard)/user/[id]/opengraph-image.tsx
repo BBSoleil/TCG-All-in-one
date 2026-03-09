@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { prisma } from "@/shared/lib/prisma";
+import { getUserOgData } from "@/features/social/services/profiles";
 
 export const runtime = "nodejs";
 export const alt = "User profile";
@@ -13,23 +13,9 @@ export default async function OGImage({
 }) {
   const { id } = await params;
 
-  const user = await prisma.user.findUnique({
-    where: { id },
-    select: {
-      name: true,
-      image: true,
-      bio: true,
-      _count: {
-        select: {
-          collections: true,
-          followers: true,
-          achievements: true,
-        },
-      },
-    },
-  });
+  const result = await getUserOgData(id);
 
-  if (!user) {
+  if (!result.success) {
     return new ImageResponse(
       (
         <div
@@ -51,6 +37,7 @@ export default async function OGImage({
     );
   }
 
+  const user = result.data;
   const name = user.name ?? "Collector";
   const initial = name[0]?.toUpperCase() ?? "?";
 
@@ -155,19 +142,19 @@ export default async function OGImage({
           >
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ fontSize: 36, fontWeight: 700, color: "#facc15", display: "flex" }}>
-                {user._count.collections}
+                {user.collectionCount}
               </div>
               <div style={{ fontSize: 14, color: "#94a3b8", display: "flex" }}>Collections</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ fontSize: 36, fontWeight: 700, color: "#facc15", display: "flex" }}>
-                {user._count.followers}
+                {user.followerCount}
               </div>
               <div style={{ fontSize: 14, color: "#94a3b8", display: "flex" }}>Followers</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ fontSize: 36, fontWeight: 700, color: "#facc15", display: "flex" }}>
-                {user._count.achievements}
+                {user.achievementCount}
               </div>
               <div style={{ fontSize: 14, color: "#94a3b8", display: "flex" }}>Achievements</div>
             </div>

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { getPublicProfile, getPublicCollections } from "@/features/social/services/profiles";
+import { getPublicProfile, getPublicCollections, getUserName } from "@/features/social/services/profiles";
 import { getFollowState } from "@/features/social/services/follows";
 import { FollowButton, AchievementList } from "@/features/social/components";
 import { Badge } from "@/components/ui/badge";
@@ -22,12 +22,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const { prisma } = await import("@/shared/lib/prisma");
-  const user = await prisma.user.findUnique({
-    where: { id },
-    select: { name: true },
-  });
-  const name = user?.name ?? "Collector";
+  const result = await getUserName(id);
+  const name = result.success ? result.data : "Collector";
   return {
     title: `${name} | TCG All-in-One`,
     description: `View ${name}'s TCG collection and achievements on TCG All-in-One.`,
