@@ -150,16 +150,15 @@ export function CardBrowserClient() {
       // Check search cache first
       const cachedSearch = searchCache.get(paramsKey);
       if (cachedSearch) {
-        // Apply cached data via microtask to avoid sync setState in effect
+        // Apply cached data + fetch sets via microtask to avoid sync setState in effect
         Promise.resolve().then(() => {
           if (!controller.signal.aborted) {
             setData(cachedSearch);
             setMode("search");
             setLoading(false);
+            fetchSets(controller.signal, gameType);
           }
         });
-        // Still fetch sets in background
-        fetchSets(controller.signal, gameType);
         return;
       }
 
