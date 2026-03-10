@@ -9,7 +9,7 @@ import { GAME_LABELS } from "@/shared/types";
 import { quickAddToWishlist } from "@/features/wishlist/actions/quick-add";
 import { AddToCollectionPopover } from "./add-to-collection-popover";
 import { QuickSellPopover } from "./quick-sell-popover";
-import { GAME_COLORS } from "@/shared/constants";
+import { GAME_COLORS, GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import type { CardListItem } from "@/features/cards/types";
 
@@ -52,7 +52,7 @@ export const CardGridTile = memo(function CardGridTile({ card }: { card: CardLis
             {card.name}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1">
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className={`text-xs ${GAME_BADGE_CLASSES[card.gameType] ?? ""}`}>
               {GAME_LABELS[card.gameType] ?? card.gameType}
             </Badge>
             {card.rarity && (

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
-import { GAME_BORDER_COLORS } from "@/shared/constants";
+import { GAME_BORDER_COLORS, GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import type { ListingItem } from "../types";
 
@@ -55,7 +55,7 @@ export function ListingCard({ listing }: { listing: ListingItem }) {
                 {listing.card.name}
               </Link>
               <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className={`text-[10px] ${GAME_BADGE_CLASSES[listing.card.gameType] ?? ""}`}>
                   {GAME_LABELS[listing.card.gameType as keyof typeof GAME_LABELS] ?? listing.card.gameType}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">{listing.condition}</Badge>

@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import { AddToWishlistDialog } from "./add-to-wishlist-dialog";
 import { AddToCollectionDialog } from "./add-to-collection-dialog";
@@ -90,7 +91,7 @@ export default async function CardDetailPage({
           <div>
             <h1 className="text-3xl font-bold">{card.name}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge>
+              <Badge variant="secondary" className={GAME_BADGE_CLASSES[card.gameType] ?? ""}>
                 {GAME_LABELS[card.gameType as keyof typeof GAME_LABELS] ?? card.gameType}
               </Badge>
               {card.rarity && <Badge variant="secondary">{card.rarity}</Badge>}

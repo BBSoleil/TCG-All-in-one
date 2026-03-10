@@ -7,6 +7,7 @@ import { removeFromWishlist } from "@/features/wishlist/actions/remove-from-wish
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import type { WishlistCardWithDetails } from "@/features/wishlist/services";
 
@@ -78,7 +79,7 @@ export function WishlistList({
             <div className="p-3">
               <p className="truncate text-sm font-medium" title={item.card.name}>{item.card.name}</p>
               <div className="mt-1 flex items-center gap-1">
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className={`text-xs ${GAME_BADGE_CLASSES[item.card.gameType] ?? ""}`}>
                   {GAME_LABELS[item.card.gameType as keyof typeof GAME_LABELS] ?? item.card.gameType}
                 </Badge>
               </div>

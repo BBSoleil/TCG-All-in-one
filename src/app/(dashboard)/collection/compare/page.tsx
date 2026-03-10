@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import type { ComparisonCard } from "@/features/collection/services/comparison";
 import { CompareForm } from "./compare-form";
@@ -47,7 +48,7 @@ function CardList({ cards, label }: { cards: ComparisonCard[]; label: string }) 
             <div className="flex h-8 w-6 items-center justify-center rounded bg-muted text-[10px]">?</div>
           )}
           <span className="truncate flex-1" title={card.name}>{card.name}</span>
-          <Badge variant="secondary" className="text-[10px] shrink-0">
+          <Badge variant="secondary" className={`text-[10px] shrink-0 ${GAME_BADGE_CLASSES[card.gameType] ?? ""}`}>
             {GAME_LABELS[card.gameType as keyof typeof GAME_LABELS] ?? card.gameType}
           </Badge>
           {card.marketPrice > 0 && (

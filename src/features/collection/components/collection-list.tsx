@@ -9,7 +9,7 @@ import { formatPrice } from "@/shared/lib/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { GAME_COLORS } from "@/shared/constants";
+import { GAME_COLORS, GAME_BADGE_CLASSES } from "@/shared/constants";
 import { ConfirmDialog } from "@/shared/components";
 import { EmptyState } from "@/shared/components";
 import type { CollectionWithStats } from "@/features/collection/services";
@@ -120,7 +120,7 @@ export function CollectionList({
                   {collection.name}
                 </Link>
                 <div className="mt-1 flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className={`text-xs ${GAME_BADGE_CLASSES[collection.gameType] ?? ""}`}>
                     {GAME_LABELS[collection.gameType as keyof typeof GAME_LABELS] ?? collection.gameType}
                   </Badge>
                   <span className="text-xs text-muted-foreground">

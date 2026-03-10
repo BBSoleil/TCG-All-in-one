@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/shared/lib/format";
 import type { TopCard } from "../types";
@@ -47,7 +48,7 @@ export function TopCardsTable({ cards }: TopCardsTableProps) {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium" title={card.name}>{card.name}</p>
             <div className="flex items-center gap-1">
-              <Badge variant="secondary" className="text-[10px] px-1 py-0">
+              <Badge variant="secondary" className={`text-[10px] px-1 py-0 ${GAME_BADGE_CLASSES[card.gameType] ?? ""}`}>
                 {GAME_LABELS[card.gameType as keyof typeof GAME_LABELS] ?? card.gameType}
               </Badge>
               {card.setName && (

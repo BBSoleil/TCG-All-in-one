@@ -9,6 +9,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { ConfirmDialog, EmptyState } from "@/shared/components";
 import { deleteDeckAction } from "../actions";
 import type { Deck } from "../types";
@@ -52,7 +53,7 @@ function DeckRow({ deck }: { deck: Deck }) {
             {deck.name}
           </Link>
           <div className="mt-1 flex items-center gap-2">
-            <Badge variant="secondary">
+            <Badge variant="secondary" className={GAME_BADGE_CLASSES[deck.gameType] ?? ""}>
               {GAME_LABELS[deck.gameType] ?? deck.gameType}
             </Badge>
             {deck.format && (

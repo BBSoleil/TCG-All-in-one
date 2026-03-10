@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_COLORS, GAME_BADGE_CLASSES } from "@/shared/constants";
 import { CopyDeckButton } from "./copy-deck-button";
 
 export const metadata: Metadata = {
@@ -51,7 +52,11 @@ export default async function CommunityDecksPage({
         </Link>
         {Object.entries(GAME_LABELS).map(([key, label]) => (
           <Link key={key} href={`/decks/community?game=${key}`}>
-            <Button variant={game === key ? "default" : "outline"} size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className={game === key ? `${GAME_COLORS[key] ?? ""} text-white border-transparent hover:opacity-90` : ""}
+            >
               {label}
             </Button>
           </Link>
@@ -79,7 +84,7 @@ export default async function CommunityDecksPage({
                     {deck.name}
                   </Link>
                   <div className="mt-1 flex items-center gap-2">
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className={GAME_BADGE_CLASSES[deck.gameType] ?? ""}>
                       {GAME_LABELS[deck.gameType] ?? deck.gameType}
                     </Badge>
                     {deck.format && (

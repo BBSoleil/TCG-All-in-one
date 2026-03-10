@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import { CollectionCardList } from "./collection-card-list";
 import { ExportCSVButton } from "./export-csv-button";
@@ -143,7 +144,7 @@ export function CollectionDetailClient({
             {collection.name}
           </h1>
           <div className="mt-1 flex items-center gap-2">
-            <Badge variant="secondary">
+            <Badge variant="secondary" className={GAME_BADGE_CLASSES[collection.gameType] ?? ""}>
               {GAME_LABELS[collection.gameType as keyof typeof GAME_LABELS] ?? collection.gameType}
             </Badge>
             <span className="text-sm text-muted-foreground">

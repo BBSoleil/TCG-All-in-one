@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_COLORS } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 
 export const metadata: Metadata = {
@@ -93,7 +94,13 @@ export default async function MarketPage({
         </Link>
         {Object.entries(GAME_LABELS).map(([key, label]) => (
           <Link key={key} href={`/market?game=${key}`}>
-            <Button variant={game === key ? "default" : "outline"} size="sm">{label}</Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className={game === key ? `${GAME_COLORS[key] ?? ""} text-white border-transparent hover:opacity-90` : ""}
+            >
+              {label}
+            </Button>
           </Link>
         ))}
       </div>

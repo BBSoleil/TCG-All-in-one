@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 
 export async function generateMetadata({
   params,
@@ -144,7 +145,7 @@ export default async function PublicProfilePage({
                   <div>
                     <p className="text-sm font-medium">{c.name}</p>
                     <div className="mt-1 flex items-center gap-2">
-                      <Badge variant="secondary">
+                      <Badge variant="secondary" className={GAME_BADGE_CLASSES[c.gameType] ?? ""}>
                         {GAME_LABELS[c.gameType as keyof typeof GAME_LABELS] ?? c.gameType}
                       </Badge>
                       <span className="text-xs text-muted-foreground">

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 
 export default async function ListingDetailPage({
@@ -56,7 +57,7 @@ export default async function ListingDetailPage({
             <div className="flex-1">
               <h1 className="text-xl font-bold">{listing.card.name}</h1>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Badge variant="secondary">
+                <Badge variant="secondary" className={GAME_BADGE_CLASSES[listing.card.gameType] ?? ""}>
                   {GAME_LABELS[listing.card.gameType as keyof typeof GAME_LABELS] ?? listing.card.gameType}
                 </Badge>
                 <Badge variant="outline">{listing.condition}</Badge>

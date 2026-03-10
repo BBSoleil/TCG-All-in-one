@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { GAME_LABELS } from "@/shared/types";
 import type { GameType } from "@/shared/types";
-import { GAME_BORDER_COLORS } from "@/shared/constants";
+import { GAME_BORDER_COLORS, GAME_BADGE_CLASSES } from "@/shared/constants";
 import type { SetInfo } from "@/features/cards/types";
 
 export function SetGrid({
@@ -65,7 +65,7 @@ function SetGridInner({ sets }: { sets: SetInfo[] }) {
             {set.setName}
           </p>
           <div className="mt-2 flex items-center justify-between">
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className={`text-xs ${GAME_BADGE_CLASSES[set.gameType] ?? ""}`}>
               {GAME_LABELS[set.gameType] ?? set.gameType}
             </Badge>
             <span className="text-xs text-muted-foreground">

@@ -18,6 +18,13 @@ export const GAME_BORDER_COLORS: Record<string, string> = {
   ONEPIECE: "border-blue-600/30",
 };
 
+export const GAME_BADGE_CLASSES: Record<string, string> = {
+  POKEMON: "bg-yellow-500 text-white",
+  YUGIOH: "bg-purple-600 text-white",
+  MTG: "bg-red-600 text-white",
+  ONEPIECE: "bg-blue-600 text-white",
+};
+
 export const CARD_CONDITIONS = [
   "Mint",
   "Near Mint",

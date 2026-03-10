@@ -7,6 +7,7 @@ import { DeckCardList, AddCardToDeck, DeckAnalysisPanel } from "@/features/decks
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GAME_LABELS } from "@/shared/types";
+import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { DeckSettings } from "./deck-settings";
 
 export default async function DeckDetailPage({
@@ -44,7 +45,7 @@ export default async function DeckDetailPage({
             </p>
           )}
           <div className="mt-2 flex items-center gap-2">
-            <Badge variant="secondary">
+            <Badge variant="secondary" className={GAME_BADGE_CLASSES[deck.gameType] ?? ""}>
               {GAME_LABELS[deck.gameType] ?? deck.gameType}
             </Badge>
             {format && <Badge variant="outline">{format.name}</Badge>}
