@@ -147,12 +147,17 @@ export function CardBrowserClient() {
     abortRef.current = controller;
 
     if (hasSearchFilters) {
-      // Check search cache first (synchronous)
+      // Check search cache first
       const cachedSearch = searchCache.get(paramsKey);
       if (cachedSearch) {
-        setData(cachedSearch);
-        setMode("search");
-        setLoading(false);
+        // Apply cached data via microtask to avoid sync setState in effect
+        Promise.resolve().then(() => {
+          if (!controller.signal.aborted) {
+            setData(cachedSearch);
+            setMode("search");
+            setLoading(false);
+          }
+        });
         // Still fetch sets in background
         fetchSets(controller.signal, gameType);
         return;

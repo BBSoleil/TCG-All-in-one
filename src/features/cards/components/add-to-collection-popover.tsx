@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { getUserCollections } from "@/features/collection/actions/get-user-collections";
 import { addCard } from "@/features/collection/actions";
 import { Button } from "@/components/ui/button";
@@ -34,12 +34,13 @@ export function AddToCollectionPopover({
   const [isPending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      getUserCollections().then(setCollections);
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
       setDone(false);
+      getUserCollections().then(setCollections);
     }
-  }, [open]);
+  }, []);
 
   function handleSubmit(e: React.MouseEvent) {
     e.stopPropagation();
@@ -59,7 +60,7 @@ export function AddToCollectionPopover({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         className="w-56 p-3"
