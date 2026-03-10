@@ -116,10 +116,27 @@ Each game has different card structures. Use a polymorphic card model:
 - [x] Saved searches (save/load search filters on card browser)
 - [x] Collection comparison (side-by-side diff of two collections)
 - [x] Bulk CSV import (parse CSV, match cards, upsert into collection)
-- All 5 phases complete + production hardening + polish & analytics
+- [x] Collection zero-SSR (API routes + client-side fetching, in-memory cache)
+- [x] Sidebar icons + nav grouping (Lucide icons, 5 groups, user avatar)
+- [x] Landing page fixes (real card counts, mobile menu, privacy/terms pages)
+- [x] Collection list: portfolio value per collection + search/sort
+- [x] Price ticker + market overview (stats, hot cards, 7D movers)
+- [x] Activity feed (computed from existing data, dashboard + social page)
+- [x] Design identity bridge (dash-card hover, nav-active-holo, gradient logo)
+- [x] Listing card upgrade (larger thumbnails, seller avatar, quick actions)
+- [x] Card detail: price analytics (7D/30D/90D change), market depth view
+- All 5 phases complete + production hardening + polish & analytics + perf/UX overhaul
 
 ## Session Log
 <!-- Claude Code: update this section at end of each session -->
+### Session: 2026-03-10
+- **Worked on**: Collection performance + UX/Design overhaul (8 phases)
+- **Created**: Collection API routes (`/api/collection`, `/api/collection/[id]`). CollectionDetailClient with in-memory cache + skeleton. Market stats service (price movers, overview). PriceTicker + MarketOverview components. ActivityFeed service (computed from existing models) + component. Privacy/Terms pages. Skeleton UI component.
+- **Modified**: Collection detail page → zero-SSR (client fetches via API). getSetCompletion accepts gameType param (eliminates correlated subquery). getCollectionCards removes redundant ownership check. getUserCollections now includes portfolio value per collection. CollectionList: search/filter + sort (name/value/cards/game/date). NavLinks: Lucide icons + 5 group sections + holo active accent. Sidebar: gradient logo, user avatar with initials fallback. ListingCard: larger thumbnails, seller avatar+rating, game-colored border, quick action button. Card detail: price analytics (7D/30D/90D change%, range), market depth (sorted listings). Landing: real card counts (90k+), mobile hamburger menu, footer dead links fixed. Dashboard: dash-card hover effect, activity feed, primary-colored portfolio value.
+- **Decisions made**: Zero-SSR pattern with `Cache-Control: private, s-maxage=30, stale-while-revalidate=300`. Activity feed computed from CollectionCard/Listing/UserAchievement/Follow tables (no new DB model). Price movers use PriceHistory 7-day window. Nav grouped: Core/Trade/Play/Social/Me. ImportCSVButton + CollectionCardList accept optional callback props for client refetch.
+- **Blockers**: None — 166 tests pass, build succeeds
+- **Next up**: Deploy, add tests for new services (market-stats, activity-feed)
+
 ### Session: 2026-03-04 (4)
 - **Worked on**: 4 new features — card price history, saved searches, collection comparison, bulk CSV import
 - **Created**: PriceHistory + SavedSearch DB models + migration. Price history service + chart (recharts AreaChart on card detail page). Price sync integration (records snapshots after price updates). Saved searches service + actions + UI (save/load/delete search filters). Collection comparison service + page (shared/unique cards diff with stats). CSV import parser + API route + ImportCSVButton component. 11 new unit tests (csv-import).

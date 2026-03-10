@@ -5,7 +5,8 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { browseListings } from "@/features/market/services/listings";
 import { getWishlistMatches } from "@/features/market/services/ratings";
-import { ListingCard, MarketFilters, MarketPagination } from "@/features/market/components";
+import { getMarketOverview } from "@/features/market/services/market-stats";
+import { ListingCard, MarketFilters, MarketPagination, PriceTicker, MarketOverview } from "@/features/market/components";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,7 @@ export default async function MarketPage({
   const sort = params.sort;
   const page = params.page ? Number(params.page) : 1;
 
-  const [listingsResult, matchesResult] = await Promise.all([
+  const [listingsResult, matchesResult, overviewResult] = await Promise.all([
     browseListings({
       gameType: game,
       search: q,
@@ -46,15 +47,21 @@ export default async function MarketPage({
       pageSize: 24,
     }),
     getWishlistMatches(session.user.id),
+    getMarketOverview(),
   ]);
 
   const data = listingsResult.success
     ? listingsResult.data
     : { listings: [], total: 0, page: 1, totalPages: 0 };
   const matches = matchesResult.success ? matchesResult.data : [];
+  const overview = overviewResult.success ? overviewResult.data : null;
 
   return (
     <div className="space-y-6">
+      {overview && overview.topMovers.length > 0 && (
+        <PriceTicker movers={overview.topMovers} />
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight md:text-2xl">Marketplace</h1>
@@ -77,6 +84,8 @@ export default async function MarketPage({
           </Link>
         </div>
       </div>
+
+      {overview && <MarketOverview data={overview} />}
 
       <div className="flex flex-wrap gap-2">
         <Link href="/market">

@@ -45,9 +45,8 @@ export function Footer() {
           <div>
             <h4 className="font-display text-xl text-white mb-6 tracking-wider">COMMUNITY</h4>
             <ul className="space-y-4 text-muted-foreground font-sans">
-              <li><span className="hover:text-accent transition-colors cursor-default">Discord Server</span></li>
-              <li><span className="hover:text-accent transition-colors cursor-default">Twitter / X</span></li>
-              <li><span className="hover:text-accent transition-colors cursor-default">Instagram</span></li>
+              <li><span className="text-muted-foreground/50 cursor-default">Discord <span className="text-xs">(coming soon)</span></span></li>
+              <li><span className="text-muted-foreground/50 cursor-default">Twitter / X <span className="text-xs">(coming soon)</span></span></li>
               <li><Link href="/vision" className="hover:text-accent transition-colors">About Us</Link></li>
             </ul>
           </div>
@@ -56,8 +55,8 @@ export function Footer() {
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground font-sans">
           <p>&copy; {new Date().getFullYear()} TCG All-in-One. Built for collectors.</p>
           <div className="flex items-center gap-6">
-            <span className="hover:text-white transition-colors cursor-default">Privacy Policy</span>
-            <span className="hover:text-white transition-colors cursor-default">Terms of Service</span>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

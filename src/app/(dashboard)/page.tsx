@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getDashboardStats } from "@/features/collection/services";
 import { recordPortfolioSnapshot, getPortfolioHistory } from "@/features/collection/services/portfolio-history";
+import { getActivityFeed } from "@/features/social/services/activity-feed";
+import { ActivityFeed } from "@/features/social/components";
 import dynamic from "next/dynamic";
 
 const PortfolioChart = dynamic(
@@ -28,14 +30,16 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [result, historyResult] = await Promise.all([
+  const [result, historyResult, feedResult] = await Promise.all([
     getDashboardStats(session.user.id),
     getPortfolioHistory(session.user.id, 30),
+    getActivityFeed(session.user.id, 10),
   ]);
   const stats = result.success
     ? result.data
     : { totalCollections: 0, totalCards: 0, portfolioValue: 0, collectionsByGame: [] };
   const history = historyResult.success ? historyResult.data : [];
+  const feed = feedResult.success ? feedResult.data : [];
 
   // Record a snapshot (fire-and-forget, don't block render)
   void recordPortfolioSnapshot(session.user.id);
@@ -50,18 +54,18 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="dash-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Cards
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{stats.totalCards}</p>
+            <p className="text-2xl font-bold">{stats.totalCards.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dash-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Collections
@@ -72,7 +76,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dash-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Games Active
@@ -85,14 +89,14 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dash-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Portfolio Value
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
+            <p className="text-2xl font-bold text-primary">
               {formatPrice(stats.portfolioValue)}
             </p>
           </CardContent>
@@ -145,6 +149,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      <ActivityFeed events={feed} title="Recent Activity" compact />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>

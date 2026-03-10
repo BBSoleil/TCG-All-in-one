@@ -16,9 +16,11 @@ import {
 export function AddCardDialog({
   collectionId,
   gameType,
+  onCardAdded,
 }: {
   collectionId: string;
   gameType: string;
+  onCardAdded?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [cards, setCards] = useState<{ id: string; name: string }[]>([]);
@@ -49,7 +51,11 @@ export function AddCardDialog({
             cards={cards}
             onSuccess={() => {
               setOpen(false);
-              router.refresh();
+              if (onCardAdded) {
+                onCardAdded();
+              } else {
+                router.refresh();
+              }
             }}
           />
         )}

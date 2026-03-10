@@ -16,6 +16,7 @@ export interface CollectionWithStats {
   createdAt: Date;
   updatedAt: Date;
   _count: { cards: number };
+  portfolioValue?: number;
 }
 
 export interface CollectionCardWithDetails {
@@ -47,12 +48,32 @@ export async function getUserCollections(
   userId: string,
 ): Promise<Result<CollectionWithStats[]>> {
   try {
-    const collections = await prisma.collection.findMany({
-      where: { userId },
-      include: { _count: { select: { cards: true } } },
-      orderBy: { updatedAt: "desc" },
-    });
-    return { success: true, data: collections };
+    const [collections, valueRows] = await Promise.all([
+      prisma.collection.findMany({
+        where: { userId },
+        include: { _count: { select: { cards: true } } },
+        orderBy: { updatedAt: "desc" },
+      }),
+      prisma.$queryRawUnsafe<{ collectionId: string; value: number }[]>(
+        `SELECT col.id as "collectionId",
+                COALESCE(SUM(cc.quantity * COALESCE(c."marketPrice", 0)), 0)::float as value
+         FROM "Collection" col
+         LEFT JOIN "CollectionCard" cc ON cc."collectionId" = col.id
+         LEFT JOIN "Card" c ON c.id = cc."cardId"
+         WHERE col."userId" = $1
+         GROUP BY col.id`,
+        userId,
+      ),
+    ]);
+
+    const valueMap = new Map(valueRows.map((r) => [r.collectionId, r.value]));
+
+    const enriched = collections.map((col) => ({
+      ...col,
+      portfolioValue: valueMap.get(col.id) ?? 0,
+    }));
+
+    return { success: true, data: enriched };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to fetch collections") };
   }

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getFollowing, getFollowers } from "@/features/social/services/follows";
 import { getUserAchievements } from "@/features/social/services/achievements";
-import { UserSearch, UserCard, AchievementList } from "@/features/social/components";
+import { getActivityFeed } from "@/features/social/services/activity-feed";
+import { UserSearch, UserCard, AchievementList, ActivityFeed } from "@/features/social/components";
 import {
   Card,
   CardContent,
@@ -20,15 +21,17 @@ export default async function SocialPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [followingResult, followersResult, achievementsResult] = await Promise.all([
+  const [followingResult, followersResult, achievementsResult, feedResult] = await Promise.all([
     getFollowing(session.user.id, session.user.id),
     getFollowers(session.user.id, session.user.id),
     getUserAchievements(session.user.id),
+    getActivityFeed(session.user.id, 20),
   ]);
 
   const following = followingResult.success ? followingResult.data : [];
   const followers = followersResult.success ? followersResult.data : [];
   const achievements = achievementsResult.success ? achievementsResult.data : [];
+  const feed = feedResult.success ? feedResult.data : [];
 
   return (
     <div className="space-y-6">
@@ -91,6 +94,8 @@ export default async function SocialPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ActivityFeed events={feed} title="Activity Feed" />
 
       <AchievementList achievements={achievements} title="Your Achievements" />
     </div>

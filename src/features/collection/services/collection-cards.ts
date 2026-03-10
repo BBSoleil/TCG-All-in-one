@@ -11,14 +11,6 @@ export async function getCollectionCards(
   page = 1,
 ): Promise<Result<PaginatedCollectionCards>> {
   try {
-    const collection = await prisma.collection.findFirst({
-      where: { id: collectionId, userId },
-      select: { id: true },
-    });
-    if (!collection) {
-      return { success: false, error: new Error("Collection not found") };
-    }
-
     const offset = (page - 1) * CARDS_PER_PAGE;
 
     const [cards, total, valueRows] = await Promise.all([

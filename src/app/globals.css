@@ -211,6 +211,25 @@
   .animate-holo-gradient {
     animation: holo-gradient 4s ease infinite;
   }
+
+  /* Dashboard card with subtle gradient border on hover */
+  .dash-card {
+    @apply relative overflow-hidden;
+  }
+  .dash-card::after {
+    content: "";
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.06), transparent 50%, hsl(var(--secondary) / 0.06));
+  }
+  .dash-card:hover::after {
+    @apply opacity-100;
+  }
+
+  /* Active nav item holo accent */
+  .nav-active-holo {
+    @apply relative;
+    box-shadow: inset 3px 0 0 hsl(var(--primary));
+  }
 }
 
 @keyframes pulse-glow {
@@ -228,6 +247,18 @@
   100% {
     transform: translateX(100%);
   }
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+}
+.animate-scroll:hover {
+  animation-play-state: paused;
 }
 
 @layer base {

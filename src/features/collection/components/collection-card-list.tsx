@@ -11,9 +11,11 @@ import type { CollectionCardWithDetails } from "@/features/collection/services";
 export function CollectionCardList({
   cards,
   collectionId,
+  onCardRemoved,
 }: {
   cards: CollectionCardWithDetails[];
   collectionId: string;
+  onCardRemoved?: () => void;
 }) {
   const router = useRouter();
 
@@ -30,7 +32,11 @@ export function CollectionCardList({
   async function handleRemove(id: string) {
     const result = await removeCard(id, collectionId);
     if (!result.error) {
-      router.refresh();
+      if (onCardRemoved) {
+        onCardRemoved();
+      } else {
+        router.refresh();
+      }
     }
   }
 

@@ -11,7 +11,7 @@ interface ImportResult {
   errors: string[];
 }
 
-export function ImportCSVButton({ collectionId }: { collectionId: string }) {
+export function ImportCSVButton({ collectionId, onImported }: { collectionId: string; onImported?: () => void }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -47,7 +47,11 @@ export function ImportCSVButton({ collectionId }: { collectionId: string }) {
         }
 
         setResult(data as ImportResult);
-        router.refresh();
+        if (onImported) {
+          onImported();
+        } else {
+          router.refresh();
+        }
       } catch {
         setError("Upload failed. Please try again.");
       }

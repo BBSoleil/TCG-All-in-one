@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
   const { data: session } = useSession();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b-0 border-white/5 px-6 py-4">
@@ -50,10 +52,41 @@ export function Navbar() {
           )}
         </div>
 
-        <Button variant="ghost" size="icon" className="md:hidden text-white">
-          <Menu className="w-6 h-6" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden text-white"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+        >
+          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </Button>
       </div>
+
+      {mobileOpen && (
+        <div className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4 space-y-3">
+          <Link href="/features" className="block text-sm font-medium text-muted-foreground hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>Features</Link>
+          <Link href="/pricing" className="block text-sm font-medium text-muted-foreground hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>Pricing</Link>
+          <Link href="/vision" className="block text-sm font-medium text-muted-foreground hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>Vision</Link>
+          <div className="pt-3 border-t border-white/10 space-y-2">
+            {session?.user ? (
+              <Link href="/collection" onClick={() => setMobileOpen(false)}>
+                <Button variant="ghost" className="w-full font-display tracking-widest">Go to Collection</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setMobileOpen(false)}>
+                  <Button variant="ghost" className="w-full font-display tracking-widest">Log In</Button>
+                </Link>
+                <Link href="/signup" onClick={() => setMobileOpen(false)}>
+                  <Button className="w-full font-display tracking-widest">Get Started</Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

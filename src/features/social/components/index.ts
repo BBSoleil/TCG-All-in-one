@@ -3,3 +3,4 @@ export { UserSearch } from "./user-search";
 export { UserCard } from "./user-card";
 export { AchievementList } from "./achievement-list";
 export { ProfileVisibilityToggle, CollectionVisibilityToggle } from "./visibility-toggle";
+export { ActivityFeed } from "./activity-feed";

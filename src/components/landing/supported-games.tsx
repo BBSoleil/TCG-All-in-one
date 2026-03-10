@@ -19,7 +19,7 @@ const GAMES: Game[] = [
     color: "from-yellow-400/80 to-red-500/80",
     glow: "group-hover:shadow-[0_0_40px_rgba(250,204,21,0.4)]",
     borderColor: "group-hover:border-yellow-400/50",
-    stats: "15,200+ cards tracked",
+    stats: "20,000+ cards tracked",
     font: "font-display tracking-wider",
     symbol: (
       <div className="w-24 h-24 flex items-center justify-center">
@@ -38,7 +38,7 @@ const GAMES: Game[] = [
     color: "from-orange-500/80 to-yellow-600/80",
     glow: "group-hover:shadow-[0_0_40px_rgba(249,115,22,0.4)]",
     borderColor: "group-hover:border-orange-500/50",
-    stats: "12,400+ cards tracked",
+    stats: "14,000+ cards tracked",
     font: "font-display italic tracking-widest",
     symbol: (
       <div className="w-24 h-24 flex items-center justify-center">
@@ -57,7 +57,7 @@ const GAMES: Game[] = [
     color: "from-blue-600/80 to-indigo-900/80",
     glow: "group-hover:shadow-[0_0_40px_rgba(37,99,235,0.4)]",
     borderColor: "group-hover:border-blue-500/50",
-    stats: "25,000+ cards tracked",
+    stats: "53,000+ cards tracked",
     font: "font-serif font-bold tracking-wide",
     symbol: (
       <div className="w-24 h-24 flex items-center justify-center">
@@ -73,7 +73,7 @@ const GAMES: Game[] = [
     color: "from-red-600/80 to-orange-500/80",
     glow: "group-hover:shadow-[0_0_40px_rgba(239,68,68,0.4)]",
     borderColor: "group-hover:border-red-500/50",
-    stats: "4,800+ cards tracked",
+    stats: "4,000+ cards tracked",
     font: "font-display text-4xl tracking-widest",
     symbol: (
       <div className="w-24 h-24 flex items-center justify-center">

@@ -50,8 +50,17 @@ export async function getDashboardStats(userId: string): Promise<
 export async function getSetCompletion(
   collectionId: string,
   userId: string,
+  gameType?: string,
 ): Promise<Result<{ setName: string; owned: number; total: number }[]>> {
   try {
+    // When gameType is provided, skip the correlated subquery on 90k cards
+    const gameTypeClause = gameType
+      ? `"gameType" = $3`
+      : `"gameType" = (SELECT "gameType" FROM "Collection" WHERE id = $1)`;
+
+    const params: unknown[] = [collectionId, userId];
+    if (gameType) params.push(gameType);
+
     const rows = await prisma.$queryRawUnsafe<
       { setName: string; owned: number; total: number }[]
     >(
@@ -70,13 +79,12 @@ export async function getSetCompletion(
        LEFT JOIN (
          SELECT "setName", COUNT(*)::int as total
          FROM "Card"
-         WHERE "gameType" = (SELECT "gameType" FROM "Collection" WHERE id = $1)
+         WHERE ${gameTypeClause}
            AND "setName" IS NOT NULL
          GROUP BY "setName"
        ) total ON total."setName" = owned."setName"
        ORDER BY owned."setName"`,
-      collectionId,
-      userId,
+      ...params,
     );
 
     return { success: true, data: rows };

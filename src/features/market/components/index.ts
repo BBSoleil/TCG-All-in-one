@@ -6,3 +6,5 @@ export { RateTransactionForm } from "./rate-transaction-form";
 export { MarketFilters } from "./market-filters";
 export { MarketPagination } from "./market-pagination";
 export { EditPriceDialog } from "./edit-price-dialog";
+export { PriceTicker } from "./price-ticker";
+export { MarketOverview } from "./market-overview";
