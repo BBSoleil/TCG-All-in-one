@@ -191,13 +191,10 @@ export default async function CardDetailPage({
   );
 }
 
-function PriceAnalytics({
-  currentPrice,
-  history,
-}: {
-  currentPrice: number;
-  history: { date: string; price: number }[];
-}) {
+function computePriceAnalytics(
+  currentPrice: number,
+  history: { date: string; price: number }[],
+) {
   const now = Date.now();
   const d7 = now - 7 * 86400000;
   const d30 = now - 30 * 86400000;
@@ -215,11 +212,25 @@ function PriceAnalytics({
   const high = prices.length > 0 ? Math.max(...prices) : currentPrice;
   const low = prices.length > 0 ? Math.min(...prices) : currentPrice;
 
-  const periods = [
-    { label: "7D", data: getChangeFromDate(d7) },
-    { label: "30D", data: getChangeFromDate(d30) },
-    { label: "90D", data: getChangeFromDate(d90) },
-  ];
+  return {
+    periods: [
+      { label: "7D", data: getChangeFromDate(d7) },
+      { label: "30D", data: getChangeFromDate(d30) },
+      { label: "90D", data: getChangeFromDate(d90) },
+    ],
+    high,
+    low,
+  };
+}
+
+function PriceAnalytics({
+  currentPrice,
+  history,
+}: {
+  currentPrice: number;
+  history: { date: string; price: number }[];
+}) {
+  const { periods, high, low } = computePriceAnalytics(currentPrice, history);
 
   return (
     <div className="flex flex-wrap items-center gap-4 text-sm">

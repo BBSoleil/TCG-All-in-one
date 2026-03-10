@@ -3,7 +3,7 @@ import { mockPrisma } from "../helpers/mock-prisma";
 
 // Mock next/cache (unstable_cache used by cached())
 vi.mock("next/cache", () => ({
-  unstable_cache: (fn: Function) => fn,
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
   revalidatePath: vi.fn(),
 }));
 

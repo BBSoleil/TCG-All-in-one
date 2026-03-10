@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateDeck, GAME_FORMATS, getFormatsForGame, getFormatById } from "@/features/decks/services/formats";
+import { validateDeck, getFormatsForGame, getFormatById } from "@/features/decks/services/formats";
 import type { GameFormat } from "@/features/decks/types";
 
 function makeCards(

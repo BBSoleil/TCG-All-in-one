@@ -78,7 +78,7 @@ export function ListingCard({ listing }: { listing: ListingItem }) {
                 {/* Seller info */}
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   {listing.seller.image ? (
-                    <img src={listing.seller.image} alt="" className="h-4 w-4 rounded-full" />
+                    <Image src={listing.seller.image} alt="" width={16} height={16} className="h-4 w-4 rounded-full" />
                   ) : (
                     <div className="flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[8px] font-bold">
                       {(listing.seller.name ?? "?")[0]}

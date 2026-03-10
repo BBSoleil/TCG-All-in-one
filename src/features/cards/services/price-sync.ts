@@ -133,7 +133,7 @@ async function syncYugiohPrices(): Promise<number> {
 
 async function syncMtgPrices(): Promise<number> {
   const updates: PriceUpdate[] = [];
-  let url: string | null =
+  const url =
     "https://api.scryfall.com/bulk-data/default-cards";
 
   // Use Scryfall bulk data endpoint for efficiency
