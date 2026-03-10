@@ -62,26 +62,23 @@ export interface CardDetail {
 async function getSetsForGameUncached(
   gameType?: GameType,
 ): Promise<SetInfo[]> {
-  const where: Prisma.CardWhereInput = { setName: { not: null } };
-  if (gameType) {
-    where.gameType = gameType as PrismaGameType;
-  }
+  // Group by setName + gameType only (not setCode, which includes card numbers for YGO)
+  const gameFilter = gameType ? `AND "gameType" = '${gameType}'` : "";
+  const rows = await prisma.$queryRawUnsafe<
+    { setName: string; setCode: string | null; gameType: string; cardCount: number }[]
+  >(
+    `SELECT "setName", MIN("setCode") as "setCode", "gameType", COUNT(id)::int as "cardCount"
+     FROM cards WHERE "setName" IS NOT NULL ${gameFilter}
+     GROUP BY "setName", "gameType"
+     ORDER BY "setName" ASC`,
+  );
 
-  const groups = await prisma.card.groupBy({
-    by: ["setName", "setCode", "gameType"],
-    where,
-    _count: { id: true },
-    orderBy: { setName: "asc" },
-  });
-
-  return groups
-    .filter((g): g is typeof g & { setName: string } => g.setName !== null)
-    .map((g) => ({
-      setName: g.setName,
-      setCode: g.setCode,
-      cardCount: g._count.id,
-      gameType: g.gameType as GameType,
-    }));
+  return rows.map((r) => ({
+    setName: r.setName,
+    setCode: r.setCode,
+    cardCount: r.cardCount,
+    gameType: r.gameType as GameType,
+  }));
 }
 
 const getSetsForGameCached = cached(

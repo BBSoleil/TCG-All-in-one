@@ -408,6 +408,21 @@ async function main() {
   try { m = await importAllMtg(); } catch (e) { console.error(`\n  MTG FAILED: ${e}`); }
   try { o = await importAllOnePiece(); } catch (e) { console.error(`\n  ONEPIECE FAILED: ${e}`); }
 
+  // Generate static JSON files for CDN-served set browsing
+  console.log("\n══ GENERATING STATIC SETS ══");
+  const fs = await import("fs");
+  const path = await import("path");
+  const outDir = path.join(process.cwd(), "public", "data");
+  fs.mkdirSync(outDir, { recursive: true });
+  for (const game of ["POKEMON", "YUGIOH", "MTG", "ONEPIECE"]) {
+    const { rows } = await pool.query(
+      `SELECT "setName", MIN("setCode") as "setCode", "gameType", COUNT(id)::int as "cardCount"
+       FROM cards WHERE "setName" IS NOT NULL AND "gameType" = $1
+       GROUP BY "setName", "gameType" ORDER BY "setName" ASC`, [game]);
+    fs.writeFileSync(path.join(outDir, `sets-${game}.json`), JSON.stringify(rows));
+    console.log(`  ${game}: ${rows.length} sets`);
+  }
+
   const s = Math.round((Date.now() - start) / 1000);
   console.log(`\n══ DONE ══  Pokemon:${p} YGO:${y} MTG:${m} OP:${o} = ${p+y+m+o} cards in ${s}s`);
   await pool.end();

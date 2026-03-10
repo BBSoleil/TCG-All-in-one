@@ -21,7 +21,8 @@ export function GameTabsClient({ activeGame }: { activeGame?: string }) {
   const switchGame = useCallback(
     (game?: string) => {
       const params = new URLSearchParams();
-      if (game) params.set("gameType", game);
+      // "ALL" is explicit all-games mode (vs no param = default to Pokemon)
+      params.set("gameType", game ?? "ALL");
       // Preserve query if present
       const query = searchParams.get("query");
       if (query) params.set("query", query);
@@ -38,7 +39,7 @@ export function GameTabsClient({ activeGame }: { activeGame?: string }) {
         type="button"
         onClick={() => switchGame()}
         className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-          !activeGame
+          !activeGame || activeGame === "ALL"
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground hover:bg-muted/80"
         }`}

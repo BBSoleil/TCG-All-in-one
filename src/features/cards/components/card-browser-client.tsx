@@ -58,7 +58,9 @@ export function CardBrowserClient() {
   // Build a stable key from current search params
   const paramsKey = searchParams.toString();
 
-  const gameType = searchParams.get("gameType") ?? undefined;
+  const rawGameType = searchParams.get("gameType");
+  // Default to POKEMON on first visit, "ALL" means user explicitly chose all games
+  const gameType = rawGameType === "ALL" ? undefined : (rawGameType ?? "POKEMON");
   const query = searchParams.get("query") ?? undefined;
   const setName = searchParams.get("setName") ?? undefined;
   const rarity = searchParams.get("rarity") ?? undefined;
@@ -96,24 +98,47 @@ export function CardBrowserClient() {
     setMode("search");
   }, [searchParams]);
 
-  const fetchSets = useCallback(async (signal: AbortSignal, game?: string) => {
-    const cacheKey = `sets-${game ?? "all"}`;
+  // Fetch sets from static JSON (CDN, ~5ms) with API fallback
+  const fetchGameSets = useCallback(async (signal: AbortSignal, game: string): Promise<SetInfo[]> => {
+    const cacheKey = `sets-${game}`;
     const cached = setsCache.get(cacheKey);
-    if (cached) {
-      setSets(cached);
-      setSetNames(cached.map((s) => s.setName));
-      return;
-    }
+    if (cached) return cached;
 
-    const url = game ? `/api/cards/sets?gameType=${game}` : "/api/cards/sets";
-    const res = await fetch(url, { signal });
-    if (signal.aborted) return;
-    if (!res.ok) return;
+    // Try static JSON first (CDN-cached, no DB query)
+    try {
+      const res = await fetch(`/data/sets-${game}.json`, { signal });
+      if (res.ok) {
+        const json = await res.json() as SetInfo[];
+        setsCache.set(cacheKey, json);
+        return json;
+      }
+    } catch { /* fall through to API */ }
+
+    // Fallback to API route
+    const res = await fetch(`/api/cards/sets?gameType=${game}`, { signal });
+    if (!res.ok) return [];
     const json = await res.json() as SetInfo[];
     setsCache.set(cacheKey, json);
-    setSets(json);
-    setSetNames(json.map((s) => s.setName));
+    return json;
   }, []);
+
+  const fetchSets = useCallback(async (signal: AbortSignal, game?: string) => {
+    if (game) {
+      const result = await fetchGameSets(signal, game);
+      if (signal.aborted) return;
+      setSets(result);
+      setSetNames(result.map((s) => s.setName));
+    } else {
+      // All games — fetch all 4 static files in parallel
+      const games = ["POKEMON", "YUGIOH", "MTG", "ONEPIECE"];
+      const results = await Promise.all(games.map((g) => fetchGameSets(signal, g)));
+      if (signal.aborted) return;
+      const allSets = results.flat();
+      setsCache.set("sets-all", allSets);
+      setSets(allSets);
+      setSetNames(allSets.map((s) => s.setName));
+    }
+  }, [fetchGameSets]);
 
   useEffect(() => {
     // Cancel any in-flight request
@@ -162,30 +187,16 @@ export function CardBrowserClient() {
     return () => controller.abort();
   }, [paramsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Prefetch sets for other game tabs on idle (staggered to avoid burst DB load)
+  // Eagerly preload ALL games in parallel on mount (static files are tiny, ~5ms each)
   useEffect(() => {
+    const controller = new AbortController();
     const games = ["POKEMON", "YUGIOH", "MTG", "ONEPIECE"];
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    const prefetch = () => {
-      const toPrefetch = games.filter((g) => g !== gameType && !setsCache.get(`sets-${g}`));
-      toPrefetch.forEach((game, i) => {
-        const timer = setTimeout(() => {
-          fetch(`/api/cards/sets?gameType=${game}`)
-            .then((res) => res.ok ? res.json() as Promise<SetInfo[]> : null)
-            .then((json) => { if (json) setsCache.set(`sets-${game}`, json); })
-            .catch(() => { /* swallow prefetch errors */ });
-        }, i * 500);
-        timers.push(timer);
-      });
-    };
-
-    if (typeof requestIdleCallback !== "undefined") {
-      const id = requestIdleCallback(prefetch);
-      return () => { cancelIdleCallback(id); timers.forEach(clearTimeout); };
-    }
-    const id = setTimeout(prefetch, 2000);
-    return () => { clearTimeout(id); timers.forEach(clearTimeout); };
+    games.forEach((game) => {
+      if (!setsCache.get(`sets-${game}`)) {
+        fetchGameSets(controller.signal, game).catch(() => { /* swallow */ });
+      }
+    });
+    return () => controller.abort();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

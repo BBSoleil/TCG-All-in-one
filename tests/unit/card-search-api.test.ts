@@ -117,12 +117,12 @@ describe("GET /api/cards/search", () => {
 
 describe("GET /api/cards/sets", () => {
   beforeEach(() => {
-    mockPrisma.card.groupBy.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
   });
 
   it("returns sets with cache headers", async () => {
-    mockPrisma.card.groupBy.mockResolvedValue([
-      { setName: "Base Set", setCode: "base1", gameType: "POKEMON", _count: { id: 102 } },
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([
+      { setName: "Base Set", setCode: "base1", gameType: "POKEMON", cardCount: 102 },
     ]);
 
     const res = await setsHandler(makeRequest("/api/cards/sets?gameType=POKEMON"));
@@ -137,9 +137,9 @@ describe("GET /api/cards/sets", () => {
   });
 
   it("returns all game sets when no gameType specified", async () => {
-    mockPrisma.card.groupBy.mockResolvedValue([
-      { setName: "Base Set", setCode: "base1", gameType: "POKEMON", _count: { id: 102 } },
-      { setName: "Metal Raiders", setCode: "MRD", gameType: "YUGIOH", _count: { id: 56 } },
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([
+      { setName: "Base Set", setCode: "base1", gameType: "POKEMON", cardCount: 102 },
+      { setName: "Metal Raiders", setCode: "MRD", gameType: "YUGIOH", cardCount: 56 },
     ]);
 
     const res = await setsHandler(makeRequest("/api/cards/sets"));
