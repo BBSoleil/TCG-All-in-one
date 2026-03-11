@@ -8,3 +8,4 @@ export { MarketPagination } from "./market-pagination";
 export { EditPriceDialog } from "./edit-price-dialog";
 export { PriceTicker } from "./price-ticker";
 export { MarketOverview } from "./market-overview";
+export { PostPurchaseActions } from "./post-purchase-actions";

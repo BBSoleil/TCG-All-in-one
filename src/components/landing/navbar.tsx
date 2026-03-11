@@ -33,8 +33,8 @@ export function Navbar() {
             <Search className="w-5 h-5" />
           </Button>
           {session?.user ? (
-            <Link href="/collection">
-              <Button variant="ghost" className="font-display tracking-widest text-lg">Go to Collection</Button>
+            <Link href="/dashboard">
+              <Button variant="ghost" className="font-display tracking-widest text-lg">Go to Dashboard</Button>
             </Link>
           ) : (
             <>
@@ -71,8 +71,8 @@ export function Navbar() {
           <Link href="/vision" className="block text-sm font-medium text-muted-foreground hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>Vision</Link>
           <div className="pt-3 border-t border-white/10 space-y-2">
             {session?.user ? (
-              <Link href="/collection" onClick={() => setMobileOpen(false)}>
-                <Button variant="ghost" className="w-full font-display tracking-widest">Go to Collection</Button>
+              <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                <Button variant="ghost" className="w-full font-display tracking-widest">Go to Dashboard</Button>
               </Link>
             ) : (
               <>

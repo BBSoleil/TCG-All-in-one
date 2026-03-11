@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
+import { CardImage } from "@/shared/components";
 import { getCardById } from "@/features/cards/services";
 import { getPriceHistory } from "@/features/cards/services/price-history";
 import { browseListings } from "@/features/market/services/listings";
@@ -69,22 +69,14 @@ export default async function CardDetailPage({
 
       <div className="grid gap-6 md:grid-cols-[300px_1fr]">
         <div>
-          {card.imageUrl ? (
-            <div className="relative aspect-[2.5/3.5] overflow-hidden rounded-lg border border-border">
-              <Image
-                src={card.imageUrl}
-                alt={card.name}
-                fill
-                sizes="300px"
-                className="object-cover"
-                priority
-              />
-            </div>
-          ) : (
-            <div className="flex aspect-[2.5/3.5] items-center justify-center rounded-lg border border-border bg-muted">
-              <span className="text-muted-foreground">No image</span>
-            </div>
-          )}
+          <CardImage
+            src={card.imageUrl}
+            alt={card.name}
+            gameType={card.gameType}
+            rarity={card.rarity}
+            size="detail"
+            priority
+          />
         </div>
 
         <div className="space-y-4">

@@ -86,7 +86,7 @@ export async function importPokemonCards(
           setName: card.set.name,
           setCode: card.set.id,
           rarity: mapRarity(card.rarity),
-          imageUrl: card.images.small,
+          imageUrl: card.images.large,
           marketPrice: marketPrice,
           pokemonDetails: {
             create: {
@@ -106,7 +106,7 @@ export async function importPokemonCards(
         },
         update: {
           name: card.name,
-          imageUrl: card.images.small,
+          imageUrl: card.images.large,
           marketPrice: marketPrice,
           rarity: mapRarity(card.rarity),
         },

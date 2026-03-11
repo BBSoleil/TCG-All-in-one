@@ -56,9 +56,10 @@ jobs:
   e2e:
     name: E2E Tests
     needs: [build]
+    if: ${{ vars.E2E_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+      DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
       AUTH_SECRET: "ci-placeholder-secret-not-real"
       NEXTAUTH_URL: "http://localhost:3000"
     steps:

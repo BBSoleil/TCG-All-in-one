@@ -76,7 +76,7 @@ export async function importYugiohCards(
           setName: setInfo?.set_name ?? null,
           setCode: setInfo?.set_code ?? null,
           rarity: mapRarity(setInfo?.set_rarity),
-          imageUrl: card.card_images[0]?.image_url_small ?? null,
+          imageUrl: card.card_images[0]?.image_url ?? null,
           marketPrice: marketPrice,
           yugiohDetails: {
             create: {
@@ -92,7 +92,7 @@ export async function importYugiohCards(
         },
         update: {
           name: card.name,
-          imageUrl: card.card_images[0]?.image_url_small ?? null,
+          imageUrl: card.card_images[0]?.image_url ?? null,
           marketPrice: marketPrice,
           rarity: mapRarity(setInfo?.set_rarity),
         },

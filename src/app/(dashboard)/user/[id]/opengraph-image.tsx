@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getUserOgData } from "@/features/social/services/profiles";
+import { getUserOgData } from "@/features/social/services";
 
 export const runtime = "nodejs";
 export const alt = "User profile";

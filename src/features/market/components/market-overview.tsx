@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CardImage } from "@/shared/components";
 import { ShoppingCart, ArrowLeftRight, DollarSign } from "lucide-react";
 import {
   Card,
@@ -52,21 +52,12 @@ export function MarketOverview({ data }: { data: MarketOverviewData }) {
                   href={`/cards/${card.cardId}`}
                   className="group flex flex-col items-center gap-2 rounded-lg border border-border p-3 transition-colors hover:border-primary/50"
                 >
-                  {card.imageUrl ? (
-                    <div className="relative h-20 w-14 overflow-hidden rounded">
-                      <Image
-                        src={card.imageUrl}
-                        alt={card.cardName}
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-20 w-14 items-center justify-center rounded bg-muted text-xs text-muted-foreground">
-                      ?
-                    </div>
-                  )}
+                  <CardImage
+                    src={card.imageUrl}
+                    alt={card.cardName}
+                    gameType={card.gameType}
+                    size="small"
+                  />
                   <div className="text-center">
                     <p className="truncate text-xs font-medium max-w-24">{card.cardName}</p>
                     <Badge variant="outline" className="mt-1 text-[10px]">

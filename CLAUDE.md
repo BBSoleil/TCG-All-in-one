@@ -1,134 +1,450 @@
-# TCG All-in-One
+# TCG All-in-One — Claude Code Instructions
 
-## Project Overview
-Multi-license digital platform for TCG collectors and players.
-Supported games: Pokémon TCG, Yu-Gi-Oh!, Magic: The Gathering, One Piece Card Game.
+> Read this file at the start of every session. It is the single source of truth for architecture decisions, priorities, and conventions.
 
-Core pillars: Collection | Valuation | Gameplay | Community
+---
 
-## Tech Stack
-- **Framework**: Next.js 14+ (App Router, Server Components, Server Actions)
-- **Language**: TypeScript (strict mode)
-- **Styling**: Tailwind CSS 4 + shadcn/ui component library
-- **State**: Zustand (client), React Server Components (server)
-- **Database**: PostgreSQL via Prisma ORM
-- **Auth**: NextAuth.js v5 (credentials + OAuth)
-- **API Layer**: tRPC or Server Actions (prefer Server Actions for mutations)
-- **File Storage**: S3-compatible (card scans, avatars)
-- **Real-time**: Server-Sent Events or WebSocket for price alerts
-- **Testing**: Vitest + Playwright (E2E)
-- **Deployment**: Vercel
+## 🎯 Project Overview
 
-## Architecture Rules
-- Feature-based folder structure under /src/features/
-- Each feature is self-contained: components/, hooks/, actions/, types/, utils/
-- Shared code lives in /src/shared/ (ui, lib, types, constants)
-- Database models in /prisma/schema.prisma (single source of truth)
-- All API data goes through typed service layers, never raw queries in components
-- Server Components by default, 'use client' only when needed (interactivity, hooks)
-- Every new feature gets: types first → schema → service → UI → tests
+**TCG All-in-One** is a multi-license digital hub for Trading Card Game collectors and players.
 
-## Coding Standards
-- Strict TypeScript: no `any`, no `as` assertions unless justified with comment
-- Named exports only (no default exports except pages/layouts)
-- Barrel exports via index.ts per feature
-- Error handling: Result pattern for services, error boundaries for UI
-- Naming: PascalCase components, camelCase functions, SCREAMING_SNAKE constants
-- Max file length: 300 lines. If longer, split.
-- Comments: explain WHY, not WHAT. Code should be self-documenting.
-- Commits: conventional commits (feat:, fix:, chore:, refactor:, docs:, test:)
+**Supported games:** Pokémon TCG · Yu-Gi-Oh! · Magic: The Gathering · One Piece Card Game
 
-## Supported TCG Licenses (Data Models)
-Each game has different card structures. Use a polymorphic card model:
-- Base `Card` table with shared fields (id, name, imageUrl, set, rarity, marketPrice)
-- Game-specific extension tables (PokemonCardDetails, YugiohCardDetails, etc.)
-- `GameType` enum: POKEMON | YUGIOH | MTG | ONEPIECE
+**Four core pillars:**
+1. Collection Management
+2. Market Valuation
+3. Deck Building
+4. Social / Community
 
-## Feature Roadmap (Build Order)
-### Phase 1 — Foundation
-1. Auth (signup, login, profile)
-2. Collection CRUD (manual entry, per-game)
-3. Card database browser with search/filter
-4. Basic dashboard with collection stats
+**Marketplace** is a later phase (peer-to-peer, after core is stable).
 
-### Phase 2 — Intelligence
-5. Market data integration (price API)
-6. Portfolio valuation + historical charts
-7. Set completion tracking
-8. Wishlist + price alerts
+**Business model:** Freemium
+- `Rookie` — free, max 2,000 cards, basic features
+- `Master` — $9.99/mo, unlimited cards, real-time data, alerts, exclusive badges
 
-### Phase 3 — Social
-9. Public profiles + collection sharing
-10. Follow system
-11. Milestones & achievement badges
-12. Leaderboards
+---
 
-### Phase 4 — Gameplay
-13. Deck builder (per game, legality checks)
-14. Deck sharing + community decks
-15. Synergy/curve analysis
+## 🏗️ Tech Stack
 
-### Phase 5 — Marketplace
-16. Card listing system
-17. Smart matching
-18. Transaction + rating system
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 14+ (App Router, TypeScript strict) |
+| Styling | Tailwind CSS 4 + shadcn/ui |
+| Database | PostgreSQL + Prisma ORM |
+| Auth | NextAuth.js v5 |
+| State | Zustand |
+| External APIs | pokemontcg.io · YGOProDeck · Scryfall · TCGPlayer · CardMarket |
 
-## Key API Integrations
-- **Pokémon**: pokemontcg.io API
-- **Yu-Gi-Oh!**: YGOProDeck API
-- **Magic**: Scryfall API
-- **One Piece**: OPTCG API or custom scraping
-- **Pricing**: TCGPlayer API, CardMarket API
+---
 
-## Current Status
-- [x] Project scaffolded
-- [x] Auth working (signup, login, logout, OAuth, profile)
-- [x] Collection CRUD (create, delete, add/remove cards)
-- [x] Card browser (search, filter by game/rarity, pagination, detail page)
-- [x] Dashboard with collection stats + portfolio value
-- [x] Card import from APIs (Pokemon, Yu-Gi-Oh!, MTG)
-- [x] Portfolio valuation (real prices from collections)
-- [x] Set completion tracking (progress bars per set)
-- [x] Wishlist with target price alerts
-- [x] Social: public profiles, follow system, achievements (14 badges), user search
-- [x] Deck builder with per-game formats, legality checks, sideboard support
-- [x] Deck sharing + community decks (browse, copy)
-- [x] Deck analysis (cost curve, type breakdown, color/attribute, rarity, value)
-- [x] Marketplace: card listings (sell/trade), offer system, transactions, ratings
-- [x] Smart matching: wishlist-to-listing matching with target price comparison
-- [x] One Piece card import (OPTCG API)
-- [x] Full database: 90,527 cards across all 4 games
-- [x] Leaderboards (portfolio value, cards, followers, achievements, trades)
-- [x] Portfolio history charts (recharts, daily snapshots)
-- [x] Full-text search (GIN trigram index on 90k+ cards)
-- [x] Price alerts (cron-based, notification bell in dashboard)
-- [x] Stripe payments (checkout, webhooks, billing portal, subscription tiers)
-- [x] Test coverage (159 unit tests across 15 test files)
-- [x] Production hardening: next/image optimization, security headers, error boundaries
-- [x] CI/CD pipeline (GitHub Actions: lint, typecheck, test, build)
-- [x] Rate limiting on abuse-prone actions (listings, offers, follows, imports)
-- [x] Portfolio leaderboard optimized with raw SQL (single query vs N+1)
-- [x] Sentry error tracking + web vitals monitoring
-- [x] Playwright E2E test setup (auth, cards, market + 6 new E2E specs)
-- [x] Polish: DB indexes, Zod validation, dark/light mode, OG images, CSV export/import, PWA manifest
-- [x] Analytics dashboard (game/rarity breakdown charts, top cards, summary stats)
-- [x] Card price history tracking (PriceHistory model, chart on card detail)
-- [x] Saved searches (save/load search filters on card browser)
-- [x] Collection comparison (side-by-side diff of two collections)
-- [x] Bulk CSV import (parse CSV, match cards, upsert into collection)
-- [x] Collection zero-SSR (API routes + client-side fetching, in-memory cache)
-- [x] Sidebar icons + nav grouping (Lucide icons, 5 groups, user avatar)
-- [x] Landing page fixes (real card counts, mobile menu, privacy/terms pages)
-- [x] Collection list: portfolio value per collection + search/sort
-- [x] Price ticker + market overview (stats, hot cards, 7D movers)
-- [x] Activity feed (computed from existing data, dashboard + social page)
-- [x] Design identity bridge (dash-card hover, nav-active-holo, gradient logo)
-- [x] Listing card upgrade (larger thumbnails, seller avatar, quick actions)
-- [x] Card detail: price analytics (7D/30D/90D change), market depth view
-- All 5 phases complete + production hardening + polish & analytics + perf/UX overhaul
+## 📐 Core Architecture Rules
 
-## Session Log
+### 1. Card Hierarchy (NEVER skip levels)
+```
+License → Set → Cards
+```
+Every card belongs to a set. Every set belongs to a license. This is the root of all data relationships.
+
+### 2. Set Types (ALWAYS differentiate — never mix in UI)
+```ts
+enum SetType {
+  BOOSTER_SET     // main display, default view
+  STARTER_DECK    // secondary, clearly labeled
+  SPECIAL_PRODUCT // tins, bundles, etc.
+  PROMO           // promotional releases
+}
+```
+Booster sets are shown by default. Other types are accessible but separated in the UI.
+
+### 3. Sets Display Order
+Always display sets in **reverse chronological order** (`release_date DESC`) unless the user explicitly sorts differently.
+
+### 4. Multi-game Architecture (CRITICAL)
+**Never hardcode logic for a single TCG.**  
+All game-specific behavior must go through a config map:
+
+```ts
+// lib/games/config.ts
+export const GAME_CONFIG: Record<License, GameConfig> = {
+  POKEMON: {
+    filters: ['type', 'rarity', 'hp', 'stage'],
+    deckRules: {
+      minCards: 60,
+      maxCopies: 4,
+      exceptions: [
+        { match: 'supertype:Energy subtype:Basic', maxCopies: Infinity },
+        { match: 'subtypes:ACE SPEC', maxCopies: 1 },
+      ],
+    },
+    // Playset = 4 (standard deck max)
+    // ACE SPEC cards are NOT counted toward playset — they're always singular
+    playsetSize: 4,
+    cardRatio: '2.5 / 3.5',
+  },
+  YUGIOH: {
+    filters: ['type', 'attribute', 'level', 'atk', 'def'],
+    deckRules: {
+      minCards: 40,
+      maxCards: 60,
+      maxCopies: 3,
+      // Forbidden & Limited List overrides maxCopies per card:
+      // FORBIDDEN → 0 copies allowed in deck
+      // LIMITED   → max 1 copy
+      // SEMI-LIMITED → max 2 copies
+      // Check YGOProDeck API field: banlist_info.ban_tcg | ban_ocg
+      limitedListEnabled: true,
+    },
+    // Playset = 3 (standard max before F&L restrictions)
+    // The F&L list is a DECK BUILDER rule, not a collection rule.
+    // A user can own 3 copies of a Limited card — they just can't put 3 in a deck.
+    playsetSize: 3,
+    cardRatio: '2.25 / 3.25',
+  },
+  MAGIC: {
+    filters: ['color', 'cmc', 'type', 'rarity', 'format'],
+    deckRules: {
+      minCards: 60,
+      maxCopies: 4,
+      exceptions: [
+        { match: 'type:Basic Land', maxCopies: Infinity },
+      ],
+    },
+    // Playset = 4 (standard deck max)
+    // Basic Lands are unlimited in decks but irrelevant for playset indicator
+    playsetSize: 4,
+    cardRatio: '2.5 / 3.5',
+  },
+  ONE_PIECE: {
+    filters: ['color', 'cost', 'type', 'power', 'counter'],
+    deckRules: {
+      minCards: 50,
+      maxCopies: 4,
+      // Leader card: exactly 1, separate from main deck
+      // DON!! cards: exactly 10, not counted in the 50
+    },
+    playsetSize: 4,
+    cardRatio: '2.25 / 3.5',
+  },
+}
+```
+
+### Playset Rules Summary
+
+| Game | Playset Size | Notes |
+|---|---|---|
+| Pokémon | 4 | ACE SPEC cards are always singular — skip playset indicator for them |
+| Yu-Gi-Oh! | 3 | F&L list affects **deck building only**, not collection ownership |
+| Magic: The Gathering | 4 | Basic Lands are unlimited — skip playset indicator for them |
+| One Piece | 4 | Leader cards are singular — skip playset indicator for them |
+
+> **Key principle:** Playset indicators reflect **collection completeness** (do you own enough to build a deck?), not deck legality. F&L restrictions, ACE SPEC rules, and Basic Land limits are enforced in the **Deck Builder**, not in the Collection view.
+
+---
+
+## 🃏 Card Rendering Standards
+
+**This is the #1 UI priority. Card display quality = product quality.**
+
+### Image Resolution by API
+```
+Scryfall (Magic)  → always use ?version=normal or large. NEVER small or png for grid view.
+pokemontcg.io     → use images.large for detail, images.small for grid
+YGOProDeck        → card_images[0].image_url for full, image_url_small for grid
+One Piece API     → verify source URL returns full-res image before using
+```
+
+### Card Component Requirements
+- Correct aspect ratio per game (use `GAME_CONFIG[license].cardRatio`)
+- Rounded corners: `rounded-lg` minimum
+- Skeleton loader while image loads (never show broken image)
+- Holographic shimmer effect for rare/holo/secret rare cards
+- Hover: subtle scale + glow effect matching card color identity
+
+### Card Condition (required for collection + marketplace)
+```ts
+enum CardCondition {
+  MINT = 'M',
+  NEAR_MINT = 'NM',
+  EXCELLENT = 'EX',
+  GOOD = 'GD',
+  LIGHT_PLAYED = 'LP',
+  PLAYED = 'PL',
+  POOR = 'PR',
+}
+```
+
+---
+
+## 🗂️ Collection System
+
+### Card Language Support
+
+**Language is a property of the collection instance, NOT of the abstract card.**  
+One card (e.g. "Charizard ex SV01-054") can exist in multiple languages in the same collection.
+
+```ts
+enum CardLanguage {
+  EN = 'EN',   // English       — Phase 1, mandatory
+  FR = 'FR',   // French        — Phase 1, mandatory
+  JP = 'JP',   // Japanese      — Phase 1, mandatory
+  DE = 'DE',   // German        — Phase 2
+  ES = 'ES',   // Spanish       — Phase 2
+  IT = 'IT',   // Italian       — Phase 2
+  PT = 'PT',   // Portuguese    — Phase 2
+  KO = 'KO',   // Korean        — Phase 2
+  ZH_HANS = 'ZH_HANS', // Chinese Simplified  — Phase 2
+  ZH_HANT = 'ZH_HANT', // Chinese Traditional — Phase 2 (Magic only)
+}
+```
+
+**Language availability per game:**
+
+| Language | Pokémon | Magic | Yu-Gi-Oh! | One Piece |
+|---|---|---|---|---|
+| EN | ✅ | ✅ | ✅ | ✅ |
+| FR | ✅ | ✅ | ✅ | ✅ |
+| JP | ✅ | ✅ | ✅ | ✅ |
+| DE | ✅ | ✅ | ✅ | ✅ |
+| ES | ✅ | ✅ | ✅ | ❌ |
+| IT | ✅ | ✅ | ✅ | ❌ |
+| PT | ✅ | ✅ | ❌ | ❌ |
+| KO | ✅ | ✅ | ✅ | ❌ |
+| ZH_HANS | ✅ | ✅ | ❌ | ❌ |
+| ZH_HANT | ❌ | ✅ | ❌ | ❌ |
+
+**API language coverage (important for image sourcing):**
+- **Scryfall (Magic)** → `lang` field on every card, excellent coverage ✅
+- **pokemontcg.io** → EN only ⚠️ — JP/FR/etc. images must be sourced via CardMarket or manually
+- **YGOProDeck** → EN primary, JP partial ⚠️
+- **One Piece** → EN and JP are separate regional endpoints ✅
+
+> **Phase 1 target:** EN + FR + JP. These cover 90%+ of the European collector market.  
+> Store `language` as a free string field in DB from day 1 — never lock to an enum in migrations, validate at application layer only.
+
+### Card Instance Model
+A user's collection stores **instances**, not abstract cards:
+```ts
+type CollectionEntry = {
+  cardId: string
+  userId: string
+  quantity: number
+  condition: CardCondition
+  language: CardLanguage   // see CardLanguage enum above — EN | FR | JP mandatory in Phase 1
+  foil: boolean
+  forSale: boolean
+  forTrade: boolean
+  acquiredPrice?: number
+  acquiredAt?: Date
+}
+```
+
+### Collection Indicators (show on every card in grid)
+```
+● Purple  → owned, 1 copy
+◉ Blue    → owned, playset complete (per GAME_CONFIG[license].playsetSize)
+◈ Gradient → owned, both (1+ copies AND playset)
+○ Empty   → not in collection
+```
+
+### Filters Required (in collection view)
+- Language (mandatory)
+- Condition
+- For sale / For trade toggles
+- Set type (booster / starter / promo)
+- Game-specific filters (from GAME_CONFIG)
+
+---
+
+## 🏪 Marketplace
+
+### Offer State Machine
+```
+PENDING → COUNTERED → ACCEPTED
+                    → DECLINED
+                    → EXPIRED (after 48h)
+```
+Never bypass states. Every transition must be logged with timestamp and actor.
+
+### Listing Model
+```ts
+type Listing = {
+  cardInstanceId: string
+  sellerId: string
+  price: number
+  currency: 'EUR' | 'USD'
+  condition: CardCondition
+  language: CardLanguage
+  shippingZones: ShippingZone[]  // seller defines per-zone price
+  photos: string[]               // min 1, max 6
+  status: ListingStatus
+}
+```
+
+### Shipping Model (confirmed)
+
+Sellers define their own shipping fees per zone at listing creation. Standard CardMarket-style model — familiar to TCG sellers.
+
+```ts
+type ShippingZone = {
+  zone: 'DOMESTIC' | 'EU' | 'WORLDWIDE'
+  price: number
+  currency: 'EUR' | 'USD'
+  estimatedDays: { min: number, max: number }
+}
+```
+
+Listings can also set `freeShippingAbove?: number` (e.g. free shipping if order > €50).
+
+**Commission rules (confirmed):**
+- Platform commission applies to **item price only** — never on shipping fees
+- Dynamic shipping (weight × distance via carrier API) is deferred to Phase 5+ only
+- This is a hard rule — never change without an explicit business decision + DB migration plan
+
+### Payment (implementation order)
+1. Stripe (CB, Apple Pay, Google Pay) — Phase 1
+2. Platform credit/wallet — Phase 2
+3. Crypto — only if explicitly validated by users, MiCA compliance required
+
+---
+
+## 📊 Analytics & Market Data
+
+### Phase 1 — External APIs
+Pull prices from CardMarket and TCGPlayer. Display as:
+```
+CardMarket: €X  |  TCGPlayer: $Y  |  Platform: €Z (when available)
+```
+Show competitor prices small, as context — not as a competitive argument.
+
+### Phase 2 — Native Pricing
+Build price history from actual platform transactions. Supersedes external APIs over time.
+
+### Required Analytics Views
+- Top 10 most valuable cards in collection
+- **Favorites view** (user-pinned cards, regardless of value)
+- **Gainers / Losers** — cards that gained or lost most value over last 7/30 days
+- Portfolio total value over time
+
+---
+
+## 🃏 Deck Builder
+
+### Rules per game (from GAME_CONFIG)
+Validate deck composition client-side AND server-side.
+
+### Required Features
+- Import from text list (standard format per game, e.g. `4x Pikachu EX SV01`)
+- Trending decks (pull from community APIs or curate manually)
+- Quick completion: show cards missing from collection, link to marketplace listings
+- Export to text / share link
+
+---
+
+## 🔗 Cross-feature Navigation (Quick Links)
+
+Every card detail view must expose:
+```
+[+ Add to Collection]  [+ Add to Deck]  [View Marketplace Listings]  [★ Favorite]
+```
+Never make the user navigate to another section manually to do these actions.
+
+---
+
+## 👥 Social System
+
+### Notifications (no private text messages — announcements only)
+- New card in someone's collection (if public)
+- New marketplace listing (filtered by followed users or wishlist)
+- Card search request ("Looking for X card")
+- Badge earned
+
+### Leaderboard Filters
+```
+Scope: Global → Country → Region → City
+Network: All users | Followers only | Mutual follows
+Game: All games | Per license
+```
+
+---
+
+## 🏗️ Build Phases
+
+| Phase | Scope |
+|---|---|
+| 1 | Auth + Card Browser + Collection (with language, condition, set types) |
+| 2 | Market data + Price history + Analytics |
+| 3 | Social + Badges + Leaderboard |
+| 4 | Deck Builder |
+| 5 | Marketplace + Native pricing + Payments |
+
+---
+
+## 📁 Folder Structure
+
+```
+/app
+  /(auth)/
+  /(dashboard)/
+    /collection/
+    /market/
+    /decks/
+    /social/
+    /analytics/
+    /marketplace/
+/components
+  /cards/          ← card rendering, ALWAYS game-agnostic
+  /collection/
+  /marketplace/
+  /deck/
+  /social/
+  /ui/             ← shadcn + custom primitives
+/lib
+  /games/
+    config.ts      ← GAME_CONFIG lives here
+    filters.ts     ← filter schemas per game
+    deck-rules.ts  ← validation per game
+  /api/
+    /pokemon/
+    /yugioh/
+    /magic/
+    /onepiece/
+  /prisma/
+/hooks
+/store             ← Zustand stores
+/types
+```
+
+---
+
+## ⚠️ Hard Rules
+
+1. **Never hardcode for one TCG.** Use `GAME_CONFIG` and the license enum everywhere.
+2. **Never mix set types** in the same UI level. Booster sets ≠ Starter Decks.
+3. **Always use correct image resolution** per API. No `small` images in card detail views.
+4. **Card language is mandatory** in every collection entry and marketplace listing.
+5. **Offer state machine must be respected** — no direct jumps between states.
+6. **Skeleton loaders are mandatory** on all card image loads.
+7. **Commission applies to item price only**, never on shipping.
+8. **Deck rules are validated both client and server side.**
+
+---
+
+## 🎨 Design System
+
+- **Theme:** Dark only
+- **Aesthetic:** Manga / TCG holographic
+- **Palette:** Purple `#7C3AED` · Blue `#2563EB` · Cyan `#06B6D4` · Dark `#0F0F1A`
+- **Holographic effect:** CSS `background: conic-gradient(...)` + `mix-blend-mode: overlay` on rare cards
+- **Font:** Inter for UI, display font for headings (e.g. Bebas Neue or similar)
+
+---
+
+---
+
+## 📝 Session Log
+
 <!-- Claude Code: update this section at end of each session -->
+
 ### Session: 2026-03-10
 - **Worked on**: Collection performance + UX/Design overhaul (8 phases)
 - **Created**: Collection API routes (`/api/collection`, `/api/collection/[id]`). CollectionDetailClient with in-memory cache + skeleton. Market stats service (price movers, overview). PriceTicker + MarketOverview components. ActivityFeed service (computed from existing models) + component. Privacy/Terms pages. Skeleton UI component.

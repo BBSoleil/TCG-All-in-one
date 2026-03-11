@@ -1,13 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { removeFromWishlist } from "@/features/wishlist/actions/remove-from-wishlist";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GAME_LABELS } from "@/shared/types";
 import { GAME_BADGE_CLASSES } from "@/shared/constants";
+import { CardImage } from "@/shared/components";
 import { formatPrice } from "@/shared/lib/format";
 import type { WishlistCardWithDetails } from "@/features/wishlist/services";
 
@@ -59,23 +59,14 @@ export function WishlistList({
               isAlert ? "border-green-500 ring-1 ring-green-500/20" : "border-border"
             }`}
           >
-            {item.card.imageUrl ? (
-              <Link href={`/cards/${item.card.id}`}>
-                <div className="relative aspect-[2.5/3.5] bg-muted">
-                  <Image
-                    src={item.card.imageUrl}
-                    alt={item.card.name}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="object-cover"
-                  />
-                </div>
-              </Link>
-            ) : (
-              <div className="flex aspect-[2.5/3.5] items-center justify-center bg-muted">
-                <span className="text-xs text-muted-foreground">No image</span>
-              </div>
-            )}
+            <Link href={`/cards/${item.card.id}`}>
+              <CardImage
+                src={item.card.imageUrl}
+                alt={item.card.name}
+                gameType={item.card.gameType}
+                size="large"
+              />
+            </Link>
             <div className="p-3">
               <p className="truncate text-sm font-medium" title={item.card.name}>{item.card.name}</p>
               <div className="mt-1 flex items-center gap-1">

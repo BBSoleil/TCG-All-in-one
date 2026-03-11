@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { CardImage } from "@/shared/components";
 import { getUserCollections } from "@/features/collection/services";
 import { compareCollections } from "@/features/collection/services/comparison";
 import { Badge } from "@/components/ui/badge";
@@ -40,13 +40,12 @@ function CardList({ cards, label }: { cards: ComparisonCard[]; label: string }) 
           href={`/cards/${card.id}`}
           className="flex items-center gap-2 rounded p-2 text-sm hover:bg-muted transition-colors"
         >
-          {card.imageUrl ? (
-            <div className="relative h-8 w-6 shrink-0 overflow-hidden rounded">
-              <Image src={card.imageUrl} alt={card.name} fill sizes="24px" className="object-cover" />
-            </div>
-          ) : (
-            <div className="flex h-8 w-6 items-center justify-center rounded bg-muted text-[10px]">?</div>
-          )}
+          <CardImage
+            src={card.imageUrl}
+            alt={card.name}
+            gameType={card.gameType}
+            size="thumb"
+          />
           <span className="truncate flex-1" title={card.name}>{card.name}</span>
           <Badge variant="secondary" className={`text-[10px] shrink-0 ${GAME_BADGE_CLASSES[card.gameType] ?? ""}`}>
             {GAME_LABELS[card.gameType as keyof typeof GAME_LABELS] ?? card.gameType}

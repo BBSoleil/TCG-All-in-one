@@ -31,7 +31,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Core",
     items: [
-      { label: "Dashboard", href: "/", icon: LayoutDashboard },
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { label: "Collection", href: "/collection", icon: Library },
       { label: "Cards", href: "/cards", icon: Search },
       { label: "Analytics", href: "/analytics", icon: BarChart3 },
@@ -79,10 +79,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             {group.title}
           </p>
           {group.items.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+            const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
 
             return (

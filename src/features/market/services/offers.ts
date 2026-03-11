@@ -259,7 +259,7 @@ export async function getUserTransactions(
       where: { OR: [{ sellerId: userId }, { buyerId: userId }] },
       include: {
         listing: {
-          select: { card: { select: { id: true, name: true, imageUrl: true } } },
+          select: { card: { select: { id: true, name: true, imageUrl: true, gameType: true } } },
         },
         seller: { select: { id: true, name: true } },
         buyer: { select: { id: true, name: true } },

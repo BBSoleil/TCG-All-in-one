@@ -193,14 +193,14 @@ async function importAllPokemon(): Promise<number> {
       const details: PokemonDetail[] = [];
       for (const c of raw) {
         const id = `pokemon-${c.id as string}`;
-        const images = c.images as { small: string } | undefined;
+        const images = c.images as { small: string; large: string } | undefined;
         const cm = c.cardmarket as { prices?: { averageSellPrice?: number } } | undefined;
         const subtypes = c.subtypes as string[] | undefined;
         const weaknesses = c.weaknesses as { type: string; value: string }[] | undefined;
         const resistances = c.resistances as { type: string; value: string }[] | undefined;
         cards.push({ id, externalId: c.id as string, name: c.name as string, gameType: "POKEMON",
           setName: set.name, setCode: set.id, rarity: PKM[(c.rarity as string) ?? ""] ?? "RARE",
-          imageUrl: images?.small ?? null, marketPrice: cm?.prices?.averageSellPrice ?? null });
+          imageUrl: images?.large ?? images?.small ?? null, marketPrice: cm?.prices?.averageSellPrice ?? null });
         details.push({ cardId: id, hp: (c.hp as string) ? parseInt(c.hp as string, 10) || null : null,
           types: (c.types as string[]) ?? [], evolvesFrom: (c.evolvesFrom as string) ?? null,
           stage: subtypes?.includes("Basic") ? "Basic" : subtypes?.includes("Stage 1") ? "Stage 1" : subtypes?.includes("Stage 2") ? "Stage 2" : subtypes?.[0] ?? null,
@@ -243,12 +243,12 @@ async function importAllYugioh(): Promise<number> {
       for (const c of json.data) {
         const id = `yugioh-${c.id as number}`;
         const cs = (c.card_sets as { set_name: string; set_code: string; set_rarity: string }[] | undefined)?.[0];
-        const img = (c.card_images as { image_url_small: string }[] | undefined)?.[0];
+        const img = (c.card_images as { image_url: string; image_url_small: string }[] | undefined)?.[0];
         const pr = (c.card_prices as { tcgplayer_price: string }[] | undefined)?.[0]?.tcgplayer_price;
         cards.push({ id, externalId: String(c.id), name: c.name as string, gameType: "YUGIOH",
           setName: cs?.set_name ?? null, setCode: cs?.set_code ?? null,
           rarity: YGO[cs?.set_rarity ?? ""] ?? "RARE",
-          imageUrl: img?.image_url_small ?? null, marketPrice: pr ? parseFloat(pr) || null : null });
+          imageUrl: img?.image_url ?? img?.image_url_small ?? null, marketPrice: pr ? parseFloat(pr) || null : null });
         details.push({ cardId: id, cardType: (c.type as string) ?? null, attribute: (c.attribute as string) ?? null,
           level: (c.level as number) ?? null, attack: (c.atk as number) ?? null,
           defense: (c.def as number) ?? null, race: (c.race as string) ?? null,
@@ -300,13 +300,13 @@ async function importAllMtg(): Promise<number> {
         const details: MtgDetail[] = [];
         for (const c of json.data) {
           const id = `mtg-${c.id as string}`;
-          const iu = c.image_uris as { small: string } | undefined;
-          const cf = c.card_faces as { image_uris?: { small: string } }[] | undefined;
+          const iu = c.image_uris as { normal: string; small: string } | undefined;
+          const cf = c.card_faces as { image_uris?: { normal: string; small: string } }[] | undefined;
           const pr = (c.prices as { usd: string | null })?.usd;
           cards.push({ id, externalId: c.id as string, name: c.name as string, gameType: "MTG",
             setName: c.set_name as string, setCode: c.set as string,
             rarity: MTG[(c.rarity as string)] ?? "RARE",
-            imageUrl: iu?.small ?? cf?.[0]?.image_uris?.small ?? null,
+            imageUrl: iu?.normal ?? cf?.[0]?.image_uris?.normal ?? null,
             marketPrice: pr ? parseFloat(pr) || null : null });
           details.push({ cardId: id, manaCost: (c.mana_cost as string) ?? null, cmc: (c.cmc as number) ?? null,
             colors: (c.colors as string[]) ?? [], typeLine: (c.type_line as string) ?? null,

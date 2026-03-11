@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getUserTransactions } from "@/features/market/services/offers";
-import { RateTransactionForm } from "@/features/market/components";
+import { RateTransactionForm, PostPurchaseActions } from "@/features/market/components";
+import { getUserCollections } from "@/features/collection/actions";
+import { getUserDecksAction } from "@/features/decks/actions/deck-actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatPrice } from "@/shared/lib/format";
 
 export const metadata: Metadata = {
@@ -17,7 +19,11 @@ export default async function TransactionHistoryPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const result = await getUserTransactions(session.user.id);
+  const [result, collections, decks] = await Promise.all([
+    getUserTransactions(session.user.id),
+    getUserCollections(),
+    getUserDecksAction(),
+  ]);
   const transactions = result.success ? result.data : [];
 
   return (
@@ -39,6 +45,7 @@ export default async function TransactionHistoryPage() {
         <div className="space-y-3">
           {transactions.map((tx) => {
             const isSeller = tx.seller.id === session.user.id;
+            const isBuyer = !isSeller;
             const otherParty = isSeller ? tx.buyer : tx.seller;
             const alreadyRated = tx.ratings.some((r) => r.raterId === session.user.id);
 
@@ -56,10 +63,20 @@ export default async function TransactionHistoryPage() {
                         {new Date(tx.completedAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <RateTransactionForm
-                      transactionId={tx.id}
-                      alreadyRated={alreadyRated}
-                    />
+                    <div className="flex flex-col items-end gap-1">
+                      <RateTransactionForm
+                        transactionId={tx.id}
+                        alreadyRated={alreadyRated}
+                      />
+                      {isBuyer && (
+                        <PostPurchaseActions
+                          cardId={tx.listing.card.id}
+                          cardGameType={tx.listing.card.gameType}
+                          collections={collections}
+                          decks={decks}
+                        />
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

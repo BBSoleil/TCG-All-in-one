@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CardImage } from "@/shared/components";
 import { Star, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,21 +29,12 @@ export function ListingCard({ listing }: { listing: ListingItem }) {
         <div className="flex gap-0">
           {/* Card image — larger */}
           <Link href={`/market/listing/${listing.id}`} className="shrink-0">
-            {listing.card.imageUrl ? (
-              <div className="relative h-44 w-32 bg-muted">
-                <Image
-                  src={listing.card.imageUrl}
-                  alt={listing.card.name}
-                  fill
-                  sizes="128px"
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex h-44 w-32 items-center justify-center bg-muted text-xs text-muted-foreground">
-                No image
-              </div>
-            )}
+            <CardImage
+              src={listing.card.imageUrl}
+              alt={listing.card.name}
+              gameType={listing.card.gameType}
+              size="medium"
+            />
           </Link>
 
           {/* Card details */}

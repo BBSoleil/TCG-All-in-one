@@ -70,6 +70,7 @@ export interface TransactionItem {
       id: string;
       name: string;
       imageUrl: string | null;
+      gameType: string;
     };
   };
   seller: { id: string; name: string | null };

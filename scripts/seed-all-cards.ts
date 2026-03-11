@@ -126,7 +126,7 @@ async function importAllPokemon(): Promise<number> {
         const id = card.id as string;
         const name = card.name as string;
         const rarity = card.rarity as string | undefined;
-        const images = card.images as { small: string } | undefined;
+        const images = card.images as { small: string; large: string } | undefined;
         const hp = card.hp as string | undefined;
         const types = card.types as string[] | undefined;
         const evolvesFrom = card.evolvesFrom as string | undefined;
@@ -144,7 +144,7 @@ async function importAllPokemon(): Promise<number> {
 
         const price = cardmarket?.prices?.averageSellPrice ?? null;
         const mappedRarity = POKEMON_RARITY[rarity ?? ""] ?? "RARE";
-        const imageUrl = images?.small ??
+        const imageUrl = images?.large ?? images?.small ??
           `https://images.pokemontcg.io/${set.id}/${id.split("-").pop()}.png`;
         const stage = subtypes?.includes("Basic")
           ? "Basic"
@@ -266,7 +266,7 @@ async function importAllYugioh(): Promise<number> {
           | { set_name: string; set_code: string; set_rarity: string }[]
           | undefined;
         const cardImages = card.card_images as
-          | { image_url_small: string }[]
+          | { image_url: string; image_url_small: string }[]
           | undefined;
         const cardPrices = card.card_prices as
           | { tcgplayer_price: string }[]
@@ -287,7 +287,7 @@ async function importAllYugioh(): Promise<number> {
               setName: setInfo?.set_name ?? null,
               setCode: setInfo?.set_code ?? null,
               rarity: YGO_RARITY[setInfo?.set_rarity ?? ""] ?? "RARE",
-              imageUrl: cardImages?.[0]?.image_url_small ?? null,
+              imageUrl: cardImages?.[0]?.image_url ?? null,
               marketPrice: price,
               yugiohDetails: {
                 create: {
@@ -303,7 +303,7 @@ async function importAllYugioh(): Promise<number> {
             },
             update: {
               name,
-              imageUrl: cardImages?.[0]?.image_url_small ?? null,
+              imageUrl: cardImages?.[0]?.image_url ?? null,
               marketPrice: price,
             },
           });
@@ -425,8 +425,8 @@ async function importAllMtg(): Promise<number> {
           };
 
           const imageUrl =
-            imageUris?.small ??
-            cardFaces?.[0]?.image_uris?.small ??
+            imageUris?.normal ??
+            cardFaces?.[0]?.image_uris?.normal ??
             null;
           const priceStr = prices?.usd;
           const price = priceStr ? parseFloat(priceStr) || null : null;

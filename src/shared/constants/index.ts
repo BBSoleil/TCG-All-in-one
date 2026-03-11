@@ -25,6 +25,9 @@ export const GAME_BADGE_CLASSES: Record<string, string> = {
   ONEPIECE: "bg-blue-600 text-white",
 };
 
+export { GAME_CONFIG, isHoloRarity, getCardAspectRatio, getGlowClass } from "./game-config";
+export type { GameConfig, DeckRules, DeckRuleException } from "./game-config";
+
 export const CARD_CONDITIONS = [
   "Mint",
   "Near Mint",

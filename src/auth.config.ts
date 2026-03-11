@@ -37,6 +37,7 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isProtected = [
+        "/dashboard",
         "/collection",
         "/cards",
         "/wishlist",
@@ -50,6 +51,12 @@ export const authConfig = {
       if (isProtected && !isLoggedIn) {
         return Response.redirect(new URL("/login", nextUrl));
       }
+
+      // Redirect authenticated users from landing page to dashboard
+      if (isLoggedIn && nextUrl.pathname === "/") {
+        return Response.redirect(new URL("/dashboard", nextUrl));
+      }
+
       return true;
     },
   },

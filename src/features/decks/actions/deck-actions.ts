@@ -10,6 +10,7 @@ import {
   removeCardFromDeck,
   copyDeck,
   getDeckById,
+  getUserDecks,
 } from "../services/decks";
 import { getFormatById, validateDeck } from "../services/formats";
 import { analyzeDeck } from "../services/analysis";
@@ -161,6 +162,18 @@ export async function analyzeDeckAction(
   if (!analysisResult.success) return { error: analysisResult.error.message };
 
   return { analysis: analysisResult.data };
+}
+
+export async function getUserDecksAction(): Promise<
+  { id: string; name: string; gameType: string }[]
+> {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const result = await getUserDecks(session.user.id);
+  if (!result.success) return [];
+
+  return result.data.map((d) => ({ id: d.id, name: d.name, gameType: d.gameType }));
 }
 
 export async function fetchCardsForDeck(

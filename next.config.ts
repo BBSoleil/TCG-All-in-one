@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "raw.githubusercontent.com" },
       { protocol: "https", hostname: "images.ygoprodeck.com" },
       { protocol: "https", hostname: "cards.scryfall.io" },
-      { protocol: "https", hostname: "**.optcgapi.com" },
+      { protocol: "https", hostname: "optcgapi.com" },
       // OAuth provider avatars
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },

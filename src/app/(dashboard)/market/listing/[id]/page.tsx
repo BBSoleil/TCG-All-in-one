@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
+import { CardImage } from "@/shared/components";
 import { auth } from "@/auth";
 import { getListingById } from "@/features/market/services/listings";
 import { getOffersOnListing } from "@/features/market/services/offers";
@@ -43,17 +43,13 @@ export default async function ListingDetailPage({
       <Card>
         <CardContent className="pt-6">
           <div className="flex gap-4">
-            {listing.card.imageUrl && (
-              <div className="relative h-48 w-32 shrink-0">
-                <Image
-                  src={listing.card.imageUrl}
-                  alt={listing.card.name}
-                  fill
-                  sizes="128px"
-                  className="rounded object-cover"
-                />
-              </div>
-            )}
+            <CardImage
+              src={listing.card.imageUrl}
+              alt={listing.card.name}
+              gameType={listing.card.gameType}
+              rarity={listing.card.rarity}
+              size="medium"
+            />
             <div className="flex-1">
               <h1 className="text-xl font-bold">{listing.card.name}</h1>
               <div className="mt-2 flex flex-wrap gap-2">

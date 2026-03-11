@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { removeCard } from "@/features/collection/actions/remove-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/shared/components";
+import { EmptyState, CardImage } from "@/shared/components";
 import type { CollectionCardWithDetails } from "@/features/collection/services";
 
 export function CollectionCardList({
@@ -47,21 +46,13 @@ export function CollectionCardList({
           key={entry.id}
           className="group rounded-lg border border-border bg-card overflow-hidden"
         >
-          {entry.card.imageUrl ? (
-            <div className="relative aspect-[2.5/3.5] bg-muted">
-              <Image
-                src={entry.card.imageUrl}
-                alt={entry.card.name}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="flex aspect-[2.5/3.5] items-center justify-center bg-muted">
-              <span className="text-xs text-muted-foreground">No image</span>
-            </div>
-          )}
+          <CardImage
+            src={entry.card.imageUrl}
+            alt={entry.card.name}
+            gameType={entry.card.gameType}
+            rarity={entry.card.rarity}
+            size="large"
+          />
           <div className="p-3">
             <p className="truncate text-sm font-medium" title={entry.card.name}>{entry.card.name}</p>
             <div className="mt-1 flex flex-wrap items-center gap-1">

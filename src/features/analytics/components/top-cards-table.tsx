@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CardImage } from "@/shared/components";
 import { GAME_LABELS } from "@/shared/types";
 import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { Badge } from "@/components/ui/badge";
@@ -30,21 +30,12 @@ export function TopCardsTable({ cards }: TopCardsTableProps) {
           <span className="w-6 text-sm font-bold text-muted-foreground">
             #{i + 1}
           </span>
-          {card.imageUrl ? (
-            <div className="relative h-10 w-8 shrink-0 overflow-hidden rounded">
-              <Image
-                src={card.imageUrl}
-                alt={card.name}
-                fill
-                sizes="32px"
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="flex h-10 w-8 items-center justify-center rounded bg-muted text-xs">
-              ?
-            </div>
-          )}
+          <CardImage
+            src={card.imageUrl}
+            alt={card.name}
+            gameType={card.gameType}
+            size="thumb"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium" title={card.name}>{card.name}</p>
             <div className="flex items-center gap-1">
