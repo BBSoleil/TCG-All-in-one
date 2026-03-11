@@ -92,6 +92,7 @@ export function CardImage({
               alt={alt}
               fill
               sizes={sizesAttr}
+              quality={90}
               unoptimized={unoptimized}
               className={`object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
               onLoad={() => setLoaded(true)}
@@ -121,6 +122,7 @@ export function CardImage({
             alt={alt}
             fill
             sizes={sizesAttr}
+            quality={90}
             unoptimized={unoptimized}
             className={`object-cover transition-all duration-300 ${
               loaded ? "opacity-100" : "opacity-0"
