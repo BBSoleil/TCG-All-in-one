@@ -72,6 +72,8 @@ export function CardImage({
   const sizesAttr = sizesProp ?? DEFAULT_SIZES[size];
   const glowClass = GLOW_CLASSES[game] ?? "group-hover:shadow-purple-500/40";
   const aspectRatio = GAME_CONFIG[game].cardRatio;
+  // optcgapi.com blocks Next.js image optimizer — bypass it
+  const unoptimized = game === "ONEPIECE";
 
   // For thumb/small/medium we use fixed pixel dimensions
   if (fixed) {
@@ -90,6 +92,7 @@ export function CardImage({
               alt={alt}
               fill
               sizes={sizesAttr}
+              unoptimized={unoptimized}
               className={`object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
               onLoad={() => setLoaded(true)}
               onError={() => setErrored(true)}
@@ -118,6 +121,7 @@ export function CardImage({
             alt={alt}
             fill
             sizes={sizesAttr}
+            unoptimized={unoptimized}
             className={`object-cover transition-all duration-300 ${
               loaded ? "opacity-100" : "opacity-0"
             } ${size === "large" ? "group-hover:scale-[1.02]" : ""}`}
