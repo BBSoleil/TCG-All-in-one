@@ -162,29 +162,38 @@ export function CardBrowserClient() {
         return;
       }
 
-      setLoading(true);
-      Promise.all([
-        fetchData(controller.signal),
-        fetchSets(controller.signal, gameType),
-      ]).finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+      Promise.resolve().then(() => {
+        if (controller.signal.aborted) return;
+        setLoading(true);
+        Promise.all([
+          fetchData(controller.signal),
+          fetchSets(controller.signal, gameType),
+        ]).finally(() => {
+          if (!controller.signal.aborted) setLoading(false);
+        });
       });
     } else {
       // Browse mode — just fetch sets
       const setsKey = `sets-${gameType ?? "all"}`;
       const cachedSets = setsCache.get(setsKey);
       if (cachedSets) {
-        setSets(cachedSets);
-        setSetNames(cachedSets.map((s) => s.setName));
-        setMode("browse");
-        setLoading(false);
+        Promise.resolve().then(() => {
+          if (controller.signal.aborted) return;
+          setSets(cachedSets);
+          setSetNames(cachedSets.map((s) => s.setName));
+          setMode("browse");
+          setLoading(false);
+        });
         return;
       }
 
-      setLoading(true);
-      setMode("browse");
-      fetchSets(controller.signal, gameType).finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+      Promise.resolve().then(() => {
+        if (controller.signal.aborted) return;
+        setLoading(true);
+        setMode("browse");
+        fetchSets(controller.signal, gameType).finally(() => {
+          if (!controller.signal.aborted) setLoading(false);
+        });
       });
     }
 
