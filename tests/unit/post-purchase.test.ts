@@ -15,7 +15,7 @@ import { auth } from "@/auth";
 import { addCardToCollection } from "@/features/collection/services/collection-cards";
 import { getUserTransactions } from "@/features/market/services/offers";
 
-const mockAuth = vi.mocked(auth);
+const mockAuth = auth as unknown as ReturnType<typeof vi.fn>;
 
 describe("addCardToCollection (increment logic)", () => {
   beforeEach(() => {
