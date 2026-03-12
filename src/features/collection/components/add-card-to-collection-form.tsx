@@ -29,14 +29,20 @@ export function AddCardToCollectionForm({
 }) {
   const [state, formAction, isPending] = useActionState(
     async (prev: CollectionActionState, formData: FormData) => {
-      const result = await addCard(prev, formData);
-      if (result.success) {
-        toast.success("Card added!");
-        onSuccess?.();
-      } else if (result.error) {
-        toast.error(result.error);
+      try {
+        const result = await addCard(prev, formData);
+        if (result.success) {
+          toast.success("Card added!");
+          onSuccess?.();
+        } else if (result.error) {
+          toast.error(result.error);
+        }
+        return result;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Something went wrong";
+        toast.error(msg);
+        return { error: msg };
       }
-      return result;
     },
     initialState,
   );

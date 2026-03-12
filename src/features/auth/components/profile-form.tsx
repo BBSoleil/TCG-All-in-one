@@ -13,13 +13,19 @@ const initialState: AuthActionState = {};
 export function ProfileForm({ name }: { name: string | null }) {
   const [state, formAction, isPending] = useActionState(
     async (prev: AuthActionState, formData: FormData) => {
-      const result = await updateProfile(prev, formData);
-      if (result.success) {
-        toast.success("Profile updated!");
-      } else if (result.error) {
-        toast.error(result.error);
+      try {
+        const result = await updateProfile(prev, formData);
+        if (result.success) {
+          toast.success("Profile updated!");
+        } else if (result.error) {
+          toast.error(result.error);
+        }
+        return result;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Something went wrong";
+        toast.error(msg);
+        return { error: msg };
       }
-      return result;
     },
     initialState,
   );

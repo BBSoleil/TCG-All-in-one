@@ -27,14 +27,20 @@ const initialState: CollectionActionState = {};
 export function CreateCollectionForm({ onSuccess }: { onSuccess?: () => void }) {
   const [state, formAction, isPending] = useActionState(
     async (prev: CollectionActionState, formData: FormData) => {
-      const result = await createCollection(prev, formData);
-      if (result.success) {
-        toast.success("Collection created!");
-        onSuccess?.();
-      } else if (result.error) {
-        toast.error(result.error);
+      try {
+        const result = await createCollection(prev, formData);
+        if (result.success) {
+          toast.success("Collection created!");
+          onSuccess?.();
+        } else if (result.error) {
+          toast.error(result.error);
+        }
+        return result;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Something went wrong";
+        toast.error(msg);
+        return { error: msg };
       }
-      return result;
     },
     initialState,
   );
