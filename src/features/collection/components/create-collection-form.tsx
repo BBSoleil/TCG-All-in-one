@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { toast } from "sonner";
 import { createCollection } from "@/features/collection/actions/create-collection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,12 @@ export function CreateCollectionForm({ onSuccess }: { onSuccess?: () => void }) 
   const [state, formAction, isPending] = useActionState(
     async (prev: CollectionActionState, formData: FormData) => {
       const result = await createCollection(prev, formData);
-      if (result.success) onSuccess?.();
+      if (result.success) {
+        toast.success("Collection created!");
+        onSuccess?.();
+      } else if (result.error) {
+        toast.error(result.error);
+      }
       return result;
     },
     initialState,

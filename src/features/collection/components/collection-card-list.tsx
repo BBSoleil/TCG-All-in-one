@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { removeCard } from "@/features/collection/actions/remove-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,13 +30,20 @@ export function CollectionCardList({
   }
 
   async function handleRemove(id: string) {
-    const result = await removeCard(id, collectionId);
-    if (!result.error) {
-      if (onCardRemoved) {
-        onCardRemoved();
+    try {
+      const result = await removeCard(id, collectionId);
+      if (result.error) {
+        toast.error(result.error);
       } else {
-        router.refresh();
+        toast.success("Card removed");
+        if (onCardRemoved) {
+          onCardRemoved();
+        } else {
+          router.refresh();
+        }
       }
+    } catch {
+      toast.error("Failed to remove card");
     }
   }
 

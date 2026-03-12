@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Bebas_Neue } from "next/font/google";
 import { SessionProvider } from "@/shared/providers/session-provider";
 import { ThemeProvider } from "@/shared/providers/theme-provider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -42,6 +43,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <SessionProvider>{children}</SessionProvider>
+          <Toaster richColors position="bottom-right" theme="dark" />
         </ThemeProvider>
       </body>
     </html>

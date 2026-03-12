@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { toast } from "sonner";
 import { updateProfile } from "@/features/auth/actions/update-profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,15 @@ const initialState: AuthActionState = {};
 
 export function ProfileForm({ name }: { name: string | null }) {
   const [state, formAction, isPending] = useActionState(
-    updateProfile,
+    async (prev: AuthActionState, formData: FormData) => {
+      const result = await updateProfile(prev, formData);
+      if (result.success) {
+        toast.success("Profile updated!");
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+      return result;
+    },
     initialState,
   );
 
@@ -31,10 +40,6 @@ export function ProfileForm({ name }: { name: string | null }) {
 
       {state.error && (
         <p className="text-sm text-destructive">{state.error}</p>
-      )}
-
-      {state.success && (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400">Profile updated successfully</p>
       )}
 
       <Button type="submit" disabled={isPending}>

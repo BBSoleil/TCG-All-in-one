@@ -1,23 +1,26 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { updateBioAction } from "@/features/social/actions";
 
 export function BioForm({ bio }: { bio: string }) {
   const [value, setValue] = useState(bio);
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const result = await updateBioAction(value);
-      if (result.error) {
-        setMessage(result.error);
-      } else {
-        setMessage("Bio updated!");
-        setTimeout(() => setMessage(""), 2000);
+      try {
+        const result = await updateBioAction(value);
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Bio updated!");
+        }
+      } catch {
+        toast.error("Failed to update bio");
       }
     });
   }
@@ -36,14 +39,9 @@ export function BioForm({ bio }: { bio: string }) {
         <span className="text-xs text-muted-foreground">
           {value.length}/500
         </span>
-        <div className="flex items-center gap-2">
-          {message && (
-            <span className="text-sm text-muted-foreground">{message}</span>
-          )}
-          <Button type="submit" size="sm" disabled={isPending}>
-            {isPending ? "Saving..." : "Save Bio"}
-          </Button>
-        </div>
+        <Button type="submit" size="sm" disabled={isPending}>
+          {isPending ? "Saving..." : "Save Bio"}
+        </Button>
       </div>
     </form>
   );

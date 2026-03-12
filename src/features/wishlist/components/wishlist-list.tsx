@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import { removeFromWishlist } from "@/features/wishlist/actions/remove-from-wishlist";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,9 +33,16 @@ export function WishlistList({
   }
 
   async function handleRemove(id: string) {
-    const result = await removeFromWishlist(id);
-    if (!result.error) {
-      router.refresh();
+    try {
+      const result = await removeFromWishlist(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Removed from wishlist");
+        router.refresh();
+      }
+    } catch {
+      toast.error("Failed to remove from wishlist");
     }
   }
 

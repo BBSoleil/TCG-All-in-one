@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { toast } from "sonner";
 import { addCard } from "@/features/collection/actions/add-card";
 import { CONDITION_OPTIONS } from "@/features/collection/schemas";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,12 @@ export function AddCardToCollectionForm({
   const [state, formAction, isPending] = useActionState(
     async (prev: CollectionActionState, formData: FormData) => {
       const result = await addCard(prev, formData);
-      if (result.success) onSuccess?.();
+      if (result.success) {
+        toast.success("Card added!");
+        onSuccess?.();
+      } else if (result.error) {
+        toast.error(result.error);
+      }
       return result;
     },
     initialState,

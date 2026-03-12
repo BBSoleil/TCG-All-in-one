@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { deleteCollection } from "@/features/collection/actions/delete-collection";
 import { GAME_LABELS } from "@/shared/types";
 import { formatPrice } from "@/shared/lib/format";
@@ -64,9 +65,16 @@ export function CollectionList({
   }
 
   async function handleDelete(id: string) {
-    const result = await deleteCollection(id);
-    if (!result.error) {
-      router.refresh();
+    try {
+      const result = await deleteCollection(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Collection deleted");
+        router.refresh();
+      }
+    } catch {
+      toast.error("Failed to delete collection");
     }
   }
 

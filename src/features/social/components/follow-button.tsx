@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { followAction, unfollowAction } from "../actions";
 
@@ -15,10 +16,17 @@ export function FollowButton({
 
   function handleClick() {
     startTransition(async () => {
-      if (isFollowing) {
-        await unfollowAction(userId);
-      } else {
-        await followAction(userId);
+      try {
+        const result = isFollowing
+          ? await unfollowAction(userId)
+          : await followAction(userId);
+        if (result?.error) {
+          toast.error(result.error);
+        } else {
+          toast.success(isFollowing ? "Unfollowed" : "Following!");
+        }
+      } catch {
+        toast.error("Something went wrong");
       }
     });
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { toggleProfileVisibilityAction, toggleCollectionVisibilityAction } from "../actions";
 
@@ -9,7 +10,16 @@ export function ProfileVisibilityToggle({ isPublic }: { isPublic: boolean }) {
 
   function handleToggle() {
     startTransition(async () => {
-      await toggleProfileVisibilityAction();
+      try {
+        const result = await toggleProfileVisibilityAction();
+        if (result?.error) {
+          toast.error(result.error);
+        } else {
+          toast.success(isPublic ? "Profile set to private" : "Profile set to public");
+        }
+      } catch {
+        toast.error("Failed to update visibility");
+      }
     });
   }
 
@@ -36,7 +46,16 @@ export function CollectionVisibilityToggle({
 
   function handleToggle() {
     startTransition(async () => {
-      await toggleCollectionVisibilityAction(collectionId);
+      try {
+        const result = await toggleCollectionVisibilityAction(collectionId);
+        if (result?.error) {
+          toast.error(result.error);
+        } else {
+          toast.success(isPublic ? "Collection set to private" : "Collection shared publicly");
+        }
+      } catch {
+        toast.error("Failed to update visibility");
+      }
     });
   }
 

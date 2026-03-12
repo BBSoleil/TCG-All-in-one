@@ -8,7 +8,7 @@ export async function checkoutAction(): Promise<{ error?: string }> {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
-  const baseUrl = process.env["NEXTAUTH_URL"] ?? "http://localhost:3000";
+  const baseUrl = process.env["AUTH_URL"] ?? process.env["NEXTAUTH_URL"] ?? "http://localhost:3000";
   const result = await createCheckoutSession(
     session.user.id,
     `${baseUrl}/profile`,
@@ -23,7 +23,7 @@ export async function portalAction(): Promise<{ error?: string }> {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
-  const baseUrl = process.env["NEXTAUTH_URL"] ?? "http://localhost:3000";
+  const baseUrl = process.env["AUTH_URL"] ?? process.env["NEXTAUTH_URL"] ?? "http://localhost:3000";
   const result = await createPortalSession(
     session.user.id,
     `${baseUrl}/profile`,

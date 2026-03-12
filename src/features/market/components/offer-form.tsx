@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,13 +25,19 @@ export function OfferForm({
     const message = (formData.get("message") as string) || undefined;
 
     startTransition(async () => {
-      const result = await makeOfferAction(listingId, price, message);
-      if (result.error) {
-        setError(result.error);
-        setSuccess(false);
-      } else {
-        setError("");
-        setSuccess(true);
+      try {
+        const result = await makeOfferAction(listingId, price, message);
+        if (result.error) {
+          setError(result.error);
+          setSuccess(false);
+          toast.error(result.error);
+        } else {
+          setError("");
+          setSuccess(true);
+          toast.success("Offer sent!");
+        }
+      } catch {
+        toast.error("Failed to send offer");
       }
     });
   }

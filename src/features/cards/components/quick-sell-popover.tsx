@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { createListingAction } from "@/features/market/actions/listing-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,10 +45,17 @@ export function QuickSellPopover({
     formData.set("isTradeOnly", "false");
 
     startTransition(async () => {
-      const result = await createListingAction(formData);
-      if (!result.error) {
-        setDone(true);
-        setTimeout(() => setOpen(false), 800);
+      try {
+        const result = await createListingAction(formData);
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Card listed for sale!");
+          setDone(true);
+          setTimeout(() => setOpen(false), 800);
+        }
+      } catch {
+        toast.error("Failed to create listing");
       }
     });
   }

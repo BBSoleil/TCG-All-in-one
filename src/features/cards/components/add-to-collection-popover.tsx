@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
+import { toast } from "sonner";
 import { getUserCollections } from "@/features/collection/actions/get-user-collections";
 import { addCard } from "@/features/collection/actions";
 import { Button } from "@/components/ui/button";
@@ -53,9 +54,18 @@ export function AddToCollectionPopover({
     formData.set("condition", "Near Mint");
 
     startTransition(async () => {
-      await addCard({}, formData);
-      setDone(true);
-      setTimeout(() => setOpen(false), 800);
+      try {
+        const result = await addCard({}, formData);
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.success("Card added to collection!");
+          setDone(true);
+          setTimeout(() => setOpen(false), 800);
+        }
+      } catch {
+        toast.error("Failed to add card");
+      }
     });
   }
 

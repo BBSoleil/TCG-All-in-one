@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,8 +36,15 @@ export function CreateListingForm() {
   function handleSearch() {
     if (!search.trim()) return;
     startSearch(async () => {
-      const cards = await searchCardsForListing(search.trim());
-      setResults(cards);
+      try {
+        const cards = await searchCardsForListing(search.trim());
+        setResults(cards);
+        if (cards.length === 0) {
+          toast.info("No cards found");
+        }
+      } catch {
+        toast.error("Search failed");
+      }
     });
   }
 
@@ -44,11 +52,17 @@ export function CreateListingForm() {
     if (!selected) return;
     formData.set("cardId", selected.id);
     startSubmit(async () => {
-      const result = await createListingAction(formData);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        router.push("/market");
+      try {
+        const result = await createListingAction(formData);
+        if (result.error) {
+          setError(result.error);
+          toast.error(result.error);
+        } else {
+          toast.success("Listing created!");
+          router.push("/market");
+        }
+      } catch {
+        toast.error("Failed to create listing");
       }
     });
   }
