@@ -1,9 +1,52 @@
 import { prisma } from "@/shared/lib/prisma";
 import type { GameType as PrismaGameType } from "@/generated/prisma/client";
 import type { Result } from "@/shared/types";
+import { ROOKIE_CARD_LIMIT } from "@/shared/constants";
 import type { CollectionCardWithDetails, PaginatedCollectionCards } from "./index";
 
 const CARDS_PER_PAGE = 24;
+
+/** Sum of all card quantities across all of a user's collections */
+export async function getUserTotalCardCount(userId: string): Promise<number> {
+  const result = await prisma.$queryRawUnsafe<{ total: number }[]>(
+    `SELECT COALESCE(SUM(cc.quantity), 0)::int as total
+     FROM "CollectionCard" cc
+     JOIN "Collection" col ON col.id = cc."collectionId"
+     WHERE col."userId" = $1`,
+    userId,
+  );
+  return result[0]?.total ?? 0;
+}
+
+async function checkFreemiumLimit(
+  userId: string,
+  additionalCards: number,
+  existingQuantity = 0,
+): Promise<Result<void>> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { subscriptionTier: true },
+  });
+
+  if (user?.subscriptionTier === "master") {
+    return { success: true, data: undefined };
+  }
+
+  const currentTotal = await getUserTotalCardCount(userId);
+  const netIncrease = additionalCards - existingQuantity;
+  if (netIncrease > 0 && currentTotal + netIncrease > ROOKIE_CARD_LIMIT) {
+    const remaining = Math.max(0, ROOKIE_CARD_LIMIT - currentTotal);
+    return {
+      success: false,
+      error: new Error(
+        `UPGRADE_REQUIRED:You've reached the free plan limit of ${ROOKIE_CARD_LIMIT.toLocaleString()} cards. ` +
+        `You can add up to ${remaining.toLocaleString()} more. Upgrade to Master for unlimited cards.`,
+      ),
+    };
+  }
+
+  return { success: true, data: undefined };
+}
 
 export async function getCollectionCards(
   collectionId: string,
@@ -109,6 +152,16 @@ export async function addCardToCollection(
       return { success: false, error: new Error("Card not found") };
     }
 
+    // Check freemium limit (account for existing quantity if updating)
+    const existing = await prisma.collectionCard.findUnique({
+      where: { collectionId_cardId: { collectionId, cardId } },
+      select: { quantity: true },
+    });
+    const limitCheck = await checkFreemiumLimit(userId, quantity, existing?.quantity ?? 0);
+    if (!limitCheck.success) {
+      return { success: false, error: limitCheck.error };
+    }
+
     const collectionCard = await prisma.collectionCard.upsert({
       where: { collectionId_cardId: { collectionId, cardId } },
       create: { collectionId, cardId, quantity, condition, notes },
@@ -188,6 +241,20 @@ export async function matchAndImportCards(
   parseErrors: string[] = [],
 ): Promise<Result<ImportResult>> {
   try {
+    // Check freemium limit for the batch
+    const collection = await prisma.collection.findFirst({
+      where: { id: collectionId },
+      select: { userId: true },
+    });
+    if (!collection) {
+      return { success: false, error: new Error("Collection not found") };
+    }
+    const batchTotal = rows.reduce((sum, r) => sum + r.quantity, 0);
+    const limitCheck = await checkFreemiumLimit(collection.userId, batchTotal);
+    if (!limitCheck.success) {
+      return { success: false, error: limitCheck.error };
+    }
+
     const cardNames = [...new Set(rows.map((r) => r.name))];
 
     const matchedCards = await prisma.card.findMany({

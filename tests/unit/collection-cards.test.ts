@@ -7,6 +7,7 @@ import {
   updateCollectionCard,
   removeCardFromCollection,
   matchAndImportCards,
+  getUserTotalCardCount,
 } from "@/features/collection/services/collection-cards";
 
 const MOCK_CARD = {
@@ -137,7 +138,14 @@ describe("addCardToCollection", () => {
   beforeEach(() => {
     mockPrisma.collection.findFirst.mockReset();
     mockPrisma.card.findUnique.mockReset();
+    mockPrisma.collectionCard.findUnique.mockReset();
     mockPrisma.collectionCard.upsert.mockReset();
+    mockPrisma.user.findUnique.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
+    // Default: free user with 0 cards (under limit)
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "free" });
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 0 }]);
+    mockPrisma.collectionCard.findUnique.mockResolvedValue(null); // no existing card
   });
 
   it("upserts card into collection", async () => {
@@ -277,8 +285,15 @@ describe("removeCardFromCollection", () => {
 
 describe("matchAndImportCards", () => {
   beforeEach(() => {
+    mockPrisma.collection.findFirst.mockReset();
     mockPrisma.card.findMany.mockReset();
     mockPrisma.collectionCard.upsert.mockReset();
+    mockPrisma.user.findUnique.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
+    // Default: free user under limit
+    mockPrisma.collection.findFirst.mockResolvedValue({ userId: "user-1" });
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "free" });
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 0 }]);
   });
 
   it("imports matched cards with case-insensitive lookup", async () => {
@@ -354,6 +369,7 @@ describe("matchAndImportCards", () => {
   });
 
   it("returns error on DB failure", async () => {
+    mockPrisma.collection.findFirst.mockResolvedValue({ userId: "user-1" });
     mockPrisma.card.findMany.mockRejectedValue(new Error("DB error"));
 
     const result = await matchAndImportCards("col-1", "POKEMON", [
@@ -361,5 +377,133 @@ describe("matchAndImportCards", () => {
     ]);
 
     expect(result.success).toBe(false);
+  });
+
+  it("rejects import when batch exceeds free-tier limit", async () => {
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 1990 }]);
+
+    const rows = Array.from({ length: 15 }, (_, i) => ({
+      name: `Card${i}`,
+      quantity: 1,
+      condition: null,
+      notes: null,
+    }));
+
+    const result = await matchAndImportCards("col-1", "POKEMON", rows);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toContain("UPGRADE_REQUIRED:");
+    }
+  });
+
+  it("allows import for master-tier users regardless of count", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "master" });
+    mockPrisma.card.findMany.mockResolvedValue([{ id: "card-1", name: "Charizard" }]);
+    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+
+    const rows = [{ name: "Charizard", quantity: 1, condition: null, notes: null }];
+    const result = await matchAndImportCards("col-1", "POKEMON", rows);
+
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("freemium gate", () => {
+  beforeEach(() => {
+    mockPrisma.collection.findFirst.mockReset();
+    mockPrisma.card.findUnique.mockReset();
+    mockPrisma.collectionCard.findUnique.mockReset();
+    mockPrisma.collectionCard.upsert.mockReset();
+    mockPrisma.user.findUnique.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
+  });
+
+  it("allows adding card at 1999 (just under limit)", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "free" });
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 1999 }]);
+    mockPrisma.collectionCard.findUnique.mockResolvedValue(null);
+    mockPrisma.collection.findFirst.mockResolvedValue({ id: "col-1" });
+    mockPrisma.card.findUnique.mockResolvedValue(MOCK_CARD);
+    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+
+    const result = await addCardToCollection("col-1", "user-1", "card-1", 1);
+
+    expect(result.success).toBe(true);
+  });
+
+  it("blocks adding card at 2000 (at limit)", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "free" });
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 2000 }]);
+    mockPrisma.collectionCard.findUnique.mockResolvedValue(null);
+    mockPrisma.collection.findFirst.mockResolvedValue({ id: "col-1" });
+    mockPrisma.card.findUnique.mockResolvedValue(MOCK_CARD);
+
+    const result = await addCardToCollection("col-1", "user-1", "card-1", 1);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toContain("UPGRADE_REQUIRED:");
+      expect(result.error.message).toMatch(/2.?000/); // locale-agnostic
+      expect(result.error.message).toContain("0 more");
+    }
+    expect(mockPrisma.collectionCard.upsert).not.toHaveBeenCalled();
+  });
+
+  it("blocks when quantity would exceed limit", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "free" });
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 1995 }]);
+    mockPrisma.collectionCard.findUnique.mockResolvedValue(null);
+    mockPrisma.collection.findFirst.mockResolvedValue({ id: "col-1" });
+    mockPrisma.card.findUnique.mockResolvedValue(MOCK_CARD);
+
+    const result = await addCardToCollection("col-1", "user-1", "card-1", 10);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toContain("UPGRADE_REQUIRED:");
+      expect(result.error.message).toContain("5 more");
+    }
+  });
+
+  it("allows master-tier users to exceed limit", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "master" });
+    mockPrisma.collectionCard.findUnique.mockResolvedValue(null);
+    mockPrisma.collection.findFirst.mockResolvedValue({ id: "col-1" });
+    mockPrisma.card.findUnique.mockResolvedValue(MOCK_CARD);
+    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+
+    const result = await addCardToCollection("col-1", "user-1", "card-1", 1);
+
+    expect(result.success).toBe(true);
+    // $queryRawUnsafe should NOT be called for master users (count query skipped)
+    expect(mockPrisma.$queryRawUnsafe).not.toHaveBeenCalled();
+  });
+
+  it("accounts for existing quantity when updating a card", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "free" });
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 1998 }]);
+    // Card already exists with quantity 2
+    mockPrisma.collectionCard.findUnique.mockResolvedValue({ quantity: 2 });
+    mockPrisma.collection.findFirst.mockResolvedValue({ id: "col-1" });
+    mockPrisma.card.findUnique.mockResolvedValue(MOCK_CARD);
+    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+
+    // Updating from 2 to 4: net increase of 2, total would be 2000 — should pass
+    const result = await addCardToCollection("col-1", "user-1", "card-1", 4);
+
+    expect(result.success).toBe(true);
+  });
+
+  it("returns correct card count via getUserTotalCardCount", async () => {
+    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ total: 1234 }]);
+
+    const count = await getUserTotalCardCount("user-1");
+
+    expect(count).toBe(1234);
+    expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(
+      expect.stringContaining("SUM(cc.quantity)"),
+      "user-1",
+    );
   });
 });

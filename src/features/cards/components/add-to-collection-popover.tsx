@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { getUserCollections } from "@/features/collection/actions/get-user-collections";
 import { addCard } from "@/features/collection/actions";
@@ -34,11 +35,13 @@ export function AddToCollectionPopover({
   const [quantity, setQuantity] = useState("1");
   const [isPending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState<string | null>(null);
 
   const handleOpenChange = useCallback((newOpen: boolean) => {
     setOpen(newOpen);
     if (newOpen) {
       setDone(false);
+      setUpgradeMsg(null);
       getUserCollections().then(setCollections);
     }
   }, []);
@@ -56,7 +59,9 @@ export function AddToCollectionPopover({
     startTransition(async () => {
       try {
         const result = await addCard({}, formData);
-        if (result.error) {
+        if (result.error?.startsWith("UPGRADE_REQUIRED:")) {
+          setUpgradeMsg(result.error.replace("UPGRADE_REQUIRED:", ""));
+        } else if (result.error) {
           toast.error(result.error);
         } else {
           toast.success("Card added to collection!");
@@ -77,7 +82,17 @@ export function AddToCollectionPopover({
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        {done ? (
+        {upgradeMsg ? (
+          <div className="space-y-2 text-xs">
+            <p className="text-purple-300">{upgradeMsg}</p>
+            <Link
+              href="/profile"
+              className="inline-block font-semibold text-purple-400 underline hover:text-purple-300"
+            >
+              Upgrade to Master →
+            </Link>
+          </div>
+        ) : done ? (
           <p className="text-center text-xs text-emerald-600 dark:text-emerald-400">Added!</p>
         ) : collections.length === 0 ? (
           <p className="text-xs text-muted-foreground">No collections yet</p>

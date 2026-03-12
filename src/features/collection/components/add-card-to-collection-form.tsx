@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { toast } from "sonner";
 import { addCard } from "@/features/collection/actions/add-card";
 import { CONDITION_OPTIONS } from "@/features/collection/schemas";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,9 +107,19 @@ export function AddCardToCollectionForm({
         <Input id="notes" name="notes" placeholder="Optional notes" />
       </div>
 
-      {state.error && (
+      {state.error && state.error.startsWith("UPGRADE_REQUIRED:") ? (
+        <div className="rounded-md border border-purple-500/30 bg-purple-500/10 p-3 text-sm">
+          <p className="text-purple-300">{state.error.replace("UPGRADE_REQUIRED:", "")}</p>
+          <Link
+            href="/profile"
+            className="mt-2 inline-block text-xs font-semibold text-purple-400 underline hover:text-purple-300"
+          >
+            Upgrade to Master →
+          </Link>
+        </div>
+      ) : state.error ? (
         <p className="text-sm text-destructive">{state.error}</p>
-      )}
+      ) : null}
 
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? "Adding..." : "Add card"}

@@ -36,3 +36,6 @@ export const CARD_CONDITIONS = [
   "Heavily Played",
   "Damaged",
 ] as const;
+
+/** Maximum total cards (sum of quantity across all collections) for free-tier users */
+export const ROOKIE_CARD_LIMIT = 2000;
