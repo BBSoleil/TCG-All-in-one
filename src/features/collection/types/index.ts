@@ -18,6 +18,8 @@ export interface CollectionCard {
   cardImageUrl: string | null;
   quantity: number;
   condition: string | null;
+  language: string;
+  foil: boolean;
   notes: string | null;
   marketPrice: number | null;
   addedAt: Date;
@@ -28,6 +30,8 @@ export interface AddCardInput {
   cardId: string;
   quantity: number;
   condition?: string;
+  language?: string;
+  foil?: boolean;
   notes?: string;
 }
 

@@ -24,6 +24,9 @@ function mockListing(overrides: Record<string, unknown> = {}) {
   return {
     id: "listing-1",
     price: 25,
+    currency: "EUR",
+    language: "EN",
+    photos: [],
     condition: "Near Mint",
     description: null,
     quantity: 1,
@@ -33,6 +36,7 @@ function mockListing(overrides: Record<string, unknown> = {}) {
     userId: "user-1",
     user: MOCK_USER,
     card: MOCK_CARD,
+    shippingZones: [],
     ...overrides,
   };
 }
@@ -62,6 +66,9 @@ describe("createListing", () => {
         quantity: 1,
         isTradeOnly: false,
         description: null,
+        currency: "EUR",
+        language: "EN",
+        photos: [],
       },
       select: { id: true },
     });

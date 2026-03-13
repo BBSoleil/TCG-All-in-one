@@ -2,6 +2,8 @@ import { prisma } from "@/shared/lib/prisma";
 import type { Result } from "@/shared/types";
 import type { OfferItem, TransactionItem } from "../types";
 
+const OFFER_EXPIRY_HOURS = 48;
+
 export async function makeOffer(
   listingId: string,
   buyerId: string,
@@ -23,6 +25,7 @@ export async function makeOffer(
         buyerId,
         price,
         message: message || null,
+        expiresAt: new Date(Date.now() + OFFER_EXPIRY_HOURS * 60 * 60 * 1000),
       },
       select: { id: true },
     });
@@ -46,6 +49,10 @@ export async function acceptOffer(
     }
     if (offer.listing.userId !== sellerId) {
       return { success: false, error: new Error("Not authorized") };
+    }
+    if (offer.expiresAt && offer.expiresAt < new Date()) {
+      await prisma.offer.update({ where: { id: offerId }, data: { status: "EXPIRED" } });
+      return { success: false, error: new Error("This offer has expired") };
     }
 
     // Create transaction, mark offer accepted, mark listing sold, decline other offers
@@ -98,6 +105,10 @@ export async function declineOffer(
     if (offer.listing.userId !== sellerId) {
       return { success: false, error: new Error("Not authorized") };
     }
+    if (offer.expiresAt && offer.expiresAt < new Date()) {
+      await prisma.offer.update({ where: { id: offerId }, data: { status: "EXPIRED" } });
+      return { success: false, error: new Error("This offer has expired") };
+    }
     await prisma.offer.update({
       where: { id: offerId },
       data: { status: "DECLINED" },
@@ -116,6 +127,10 @@ export async function withdrawOffer(
     const offer = await prisma.offer.findUnique({ where: { id: offerId } });
     if (!offer || offer.status !== "PENDING" || offer.buyerId !== buyerId) {
       return { success: false, error: new Error("Offer not found") };
+    }
+    if (offer.expiresAt && offer.expiresAt < new Date()) {
+      await prisma.offer.update({ where: { id: offerId }, data: { status: "EXPIRED" } });
+      return { success: false, error: new Error("This offer has expired") };
     }
     await prisma.offer.update({
       where: { id: offerId },
@@ -157,6 +172,7 @@ export async function getOffersOnListing(
         price: Number(o.price),
         message: o.message,
         status: o.status,
+        expiresAt: o.expiresAt,
         createdAt: o.createdAt,
         buyer: o.buyer,
         listing: {
@@ -197,6 +213,7 @@ export async function getUserOffersSent(
         price: Number(o.price),
         message: o.message,
         status: o.status,
+        expiresAt: o.expiresAt,
         createdAt: o.createdAt,
         buyer: o.buyer,
         listing: {
@@ -237,6 +254,7 @@ export async function getUserOffersReceived(
         price: Number(o.price),
         message: o.message,
         status: o.status,
+        expiresAt: o.expiresAt,
         createdAt: o.createdAt,
         buyer: o.buyer,
         listing: {

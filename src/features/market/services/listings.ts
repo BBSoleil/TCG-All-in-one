@@ -15,6 +15,10 @@ export async function createListing(
   quantity: number,
   isTradeOnly: boolean,
   description?: string,
+  currency = "EUR",
+  language = "EN",
+  photos: string[] = [],
+  shippingZones?: { zone: string; price: number; currency: string; estimatedMin: number; estimatedMax: number }[],
 ): Promise<Result<{ id: string }>> {
   try {
     const card = await prisma.card.findUnique({ where: { id: cardId } });
@@ -29,9 +33,19 @@ export async function createListing(
         quantity,
         isTradeOnly,
         description: description || null,
+        currency,
+        language,
+        photos,
+        ...(shippingZones?.length ? {
+          shippingZones: {
+            create: shippingZones,
+          },
+        } : {}),
       },
       select: { id: true },
     });
+
+    console.log(`[listing] Created listing ${listing.id} with ${photos.length} photos, ${shippingZones?.length ?? 0} shipping zones`);
     return { success: true, data: listing };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to create listing") };
@@ -47,6 +61,7 @@ export async function getUserListings(
       include: {
         user: { select: { id: true, name: true, image: true } },
         card: { select: CARD_SELECT },
+        shippingZones: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -69,6 +84,7 @@ export async function getListingById(
       include: {
         user: { select: { id: true, name: true, image: true } },
         card: { select: CARD_SELECT },
+        shippingZones: true,
       },
     });
     if (!listing) return { success: false, error: new Error("Listing not found") };

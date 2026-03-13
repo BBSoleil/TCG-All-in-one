@@ -12,6 +12,9 @@ export async function createListingAction(
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
 
+  const shippingZonesRaw = formData.get("shippingZones");
+  const photosRaw = formData.get("photos");
+
   const parsed = createListingSchema.safeParse({
     cardId: formData.get("cardId"),
     price: formData.get("price"),
@@ -19,13 +22,17 @@ export async function createListingAction(
     quantity: formData.get("quantity") ?? "1",
     isTradeOnly: formData.get("isTradeOnly"),
     description: formData.get("description") || undefined,
+    currency: formData.get("currency") || "EUR",
+    language: formData.get("language") || "EN",
+    shippingZones: shippingZonesRaw ? JSON.parse(shippingZonesRaw as string) : undefined,
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const { cardId, price, condition, quantity, isTradeOnly, description } = parsed.data;
+  const { cardId, price, condition, quantity, isTradeOnly, description, currency, language, shippingZones } = parsed.data;
+  const photos: string[] = photosRaw ? JSON.parse(photosRaw as string) : [];
 
   const rl = rateLimit(`${session.user.id}:createListing`, RATE_LIMITS.createListing);
   if (!rl.success) return { error: "Too many requests. Please try again later." };
@@ -40,6 +47,10 @@ export async function createListingAction(
     quantity,
     isTradeOnly,
     description,
+    currency,
+    language,
+    photos,
+    shippingZones,
   );
   if (!result.success) return { error: result.error.message };
 

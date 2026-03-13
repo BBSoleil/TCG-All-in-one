@@ -11,6 +11,10 @@ const CONDITIONS = [
   "Damaged",
 ] as const;
 
+const LANGUAGES = [
+  "EN", "FR", "JP", "DE", "ES", "IT", "PT", "KO", "ZH_HANS", "ZH_HANT",
+] as const;
+
 export const createCollectionSchema = z.object({
   name: z.string().min(1, { error: "Collection name is required" }).max(100),
   gameType: z.enum(GAME_TYPES, { error: "Please select a game" }),
@@ -26,6 +30,8 @@ export const addCardSchema = z.object({
   cardId: z.string().min(1),
   quantity: z.coerce.number().int().min(1, { error: "Quantity must be at least 1" }).max(9999),
   condition: z.enum(CONDITIONS).optional(),
+  language: z.enum(LANGUAGES).default("EN"),
+  foil: z.preprocess((val) => val === "true" || val === true, z.boolean()).default(false),
   notes: z.string().max(500).optional(),
 });
 
@@ -33,10 +39,13 @@ export const updateCardSchema = z.object({
   id: z.string().min(1),
   quantity: z.coerce.number().int().min(1, { error: "Quantity must be at least 1" }).max(9999),
   condition: z.enum(CONDITIONS).optional(),
+  language: z.enum(LANGUAGES).optional(),
+  foil: z.preprocess((val) => val === "true" || val === true, z.boolean()).optional(),
   notes: z.string().max(500).optional(),
 });
 
 export const CONDITION_OPTIONS = CONDITIONS;
+export const LANGUAGE_OPTIONS = LANGUAGES;
 
 export type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
 export type UpdateCollectionInput = z.infer<typeof updateCollectionSchema>;

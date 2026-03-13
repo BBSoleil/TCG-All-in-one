@@ -22,7 +22,11 @@ export interface CollectionWithStats {
 export interface CollectionCardWithDetails {
   id: string;
   quantity: number;
-  condition: string | null;
+  condition: string;
+  language: string;
+  foil: boolean;
+  forSale: boolean;
+  forTrade: boolean;
   notes: string | null;
   addedAt: Date;
   card: {

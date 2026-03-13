@@ -21,8 +21,13 @@ describe("addCardToCollection (increment logic)", () => {
   beforeEach(() => {
     mockPrisma.collection.findFirst.mockReset();
     mockPrisma.card.findUnique.mockReset();
-    mockPrisma.collectionCard.upsert.mockReset();
     mockPrisma.collectionCard.findFirst.mockReset();
+    mockPrisma.collectionCard.create.mockReset();
+    mockPrisma.collectionCard.update.mockReset();
+    mockPrisma.user.findUnique.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
+    // Default: master user (skip freemium check)
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "master" });
   });
 
   it("adds card with quantity 1 when new", async () => {
@@ -34,21 +39,19 @@ describe("addCardToCollection (increment logic)", () => {
       id: "card-1",
       name: "Pikachu",
     });
-    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+    mockPrisma.collectionCard.findFirst.mockResolvedValue(null);
+    mockPrisma.collectionCard.create.mockResolvedValue({ id: "cc-1" });
 
     const result = await addCardToCollection("col-1", "user-1", "card-1", 1);
 
     expect(result.success).toBe(true);
-    expect(mockPrisma.collectionCard.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { collectionId_cardId: { collectionId: "col-1", cardId: "card-1" } },
-        update: expect.objectContaining({ quantity: 1 }),
-        create: expect.objectContaining({ quantity: 1 }),
-      }),
-    );
+    expect(mockPrisma.collectionCard.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ quantity: 1, language: "EN", foil: false }),
+      select: { id: true },
+    });
   });
 
-  it("increments quantity from 3 to 4 on repeat add", async () => {
+  it("updates quantity from 3 to 4 on repeat add", async () => {
     mockPrisma.collection.findFirst.mockResolvedValue({
       id: "col-1",
       userId: "user-1",
@@ -57,18 +60,17 @@ describe("addCardToCollection (increment logic)", () => {
       id: "card-1",
       name: "Pikachu",
     });
-    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+    mockPrisma.collectionCard.findFirst.mockResolvedValue({ id: "cc-1", quantity: 3 });
+    mockPrisma.collectionCard.update.mockResolvedValue({ id: "cc-1" });
 
-    // Simulate calling with quantity 4 (action would have read existing=3 and added 1)
     const result = await addCardToCollection("col-1", "user-1", "card-1", 4);
 
     expect(result.success).toBe(true);
-    expect(mockPrisma.collectionCard.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        update: expect.objectContaining({ quantity: 4 }),
-        create: expect.objectContaining({ quantity: 4 }),
-      }),
-    );
+    expect(mockPrisma.collectionCard.update).toHaveBeenCalledWith({
+      where: { id: "cc-1" },
+      data: expect.objectContaining({ quantity: 4 }),
+      select: { id: true },
+    });
   });
 
   it("rejects when collection not owned by user", async () => {
@@ -102,9 +104,14 @@ describe("addPurchasedCardToCollectionAction", () => {
   beforeEach(() => {
     mockAuth.mockReset();
     mockPrisma.collectionCard.findFirst.mockReset();
+    mockPrisma.collectionCard.create.mockReset();
+    mockPrisma.collectionCard.update.mockReset();
     mockPrisma.collection.findFirst.mockReset();
     mockPrisma.card.findUnique.mockReset();
-    mockPrisma.collectionCard.upsert.mockReset();
+    mockPrisma.user.findUnique.mockReset();
+    mockPrisma.$queryRawUnsafe.mockReset();
+    // Default: master user (skip freemium check)
+    mockPrisma.user.findUnique.mockResolvedValue({ subscriptionTier: "master" });
   });
 
   it("returns error when not authenticated", async () => {
@@ -132,11 +139,12 @@ describe("addPurchasedCardToCollectionAction", () => {
 
   it("increments existing card quantity", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });
-    // Existing card with quantity 3
-    mockPrisma.collectionCard.findFirst.mockResolvedValue({ quantity: 3 });
+    // findFirst is called twice: once by the action (to get existing qty), once by service (to find variant)
+    // First call returns existing with qty 3, second call (from service) also finds it
+    mockPrisma.collectionCard.findFirst.mockResolvedValue({ id: "cc-1", quantity: 3 });
     mockPrisma.collection.findFirst.mockResolvedValue({ id: "col-1", userId: "user-1" });
     mockPrisma.card.findUnique.mockResolvedValue({ id: "card-1", name: "Pikachu" });
-    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+    mockPrisma.collectionCard.update.mockResolvedValue({ id: "cc-1" });
 
     const { addPurchasedCardToCollectionAction } = await import(
       "@/features/market/actions/offer-actions"
@@ -145,10 +153,10 @@ describe("addPurchasedCardToCollectionAction", () => {
     const result = await addPurchasedCardToCollectionAction("col-1", "card-1");
     expect(result.error).toBeUndefined();
 
-    // Should have called addCardToCollection with quantity 4 (3 + 1)
-    expect(mockPrisma.collectionCard.upsert).toHaveBeenCalledWith(
+    // Should have called update with quantity 4 (3 + 1)
+    expect(mockPrisma.collectionCard.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({ quantity: 4 }),
+        data: expect.objectContaining({ quantity: 4 }),
       }),
     );
   });
@@ -158,7 +166,7 @@ describe("addPurchasedCardToCollectionAction", () => {
     mockPrisma.collectionCard.findFirst.mockResolvedValue(null);
     mockPrisma.collection.findFirst.mockResolvedValue({ id: "col-1", userId: "user-1" });
     mockPrisma.card.findUnique.mockResolvedValue({ id: "card-1", name: "Pikachu" });
-    mockPrisma.collectionCard.upsert.mockResolvedValue({ id: "cc-1" });
+    mockPrisma.collectionCard.create.mockResolvedValue({ id: "cc-1" });
 
     const { addPurchasedCardToCollectionAction } = await import(
       "@/features/market/actions/offer-actions"
@@ -167,10 +175,9 @@ describe("addPurchasedCardToCollectionAction", () => {
     const result = await addPurchasedCardToCollectionAction("col-1", "card-1");
     expect(result.error).toBeUndefined();
 
-    expect(mockPrisma.collectionCard.upsert).toHaveBeenCalledWith(
+    expect(mockPrisma.collectionCard.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({ quantity: 1 }),
-        create: expect.objectContaining({ quantity: 1 }),
+        data: expect.objectContaining({ quantity: 1 }),
       }),
     );
   });

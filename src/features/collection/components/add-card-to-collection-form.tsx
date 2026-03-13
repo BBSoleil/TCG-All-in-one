@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { toast } from "sonner";
 import { addCard } from "@/features/collection/actions/add-card";
-import { CONDITION_OPTIONS } from "@/features/collection/schemas";
+import { CONDITION_OPTIONS, LANGUAGE_OPTIONS } from "@/features/collection/schemas";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +100,33 @@ export function AddCardToCollectionForm({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="language">Language</Label>
+        <Select name="language" defaultValue="EN">
+          <SelectTrigger>
+            <SelectValue placeholder="Select language" />
+          </SelectTrigger>
+          <SelectContent>
+            {LANGUAGE_OPTIONS.map((lang) => (
+              <SelectItem key={lang} value={lang}>
+                {lang}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="foil"
+          name="foil"
+          value="true"
+          className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500"
+        />
+        <Label htmlFor="foil">Foil / Holographic</Label>
       </div>
 
       <div className="space-y-2">

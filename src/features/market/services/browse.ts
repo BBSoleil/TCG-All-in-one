@@ -116,6 +116,7 @@ export async function getUserListingsByStatus(
       include: {
         user: { select: { id: true, name: true, image: true } },
         card: { select: CARD_SELECT },
+        shippingZones: true,
       },
       orderBy: { createdAt: "desc" },
     });

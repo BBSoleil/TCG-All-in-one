@@ -138,6 +138,8 @@ export async function addCardToCollection(
   quantity: number,
   condition?: string,
   notes?: string,
+  language = "EN",
+  foil = false,
 ): Promise<Result<{ id: string }>> {
   try {
     const collection = await prisma.collection.findFirst({
@@ -152,23 +154,34 @@ export async function addCardToCollection(
       return { success: false, error: new Error("Card not found") };
     }
 
-    // Check freemium limit (account for existing quantity if updating)
-    const existing = await prisma.collectionCard.findUnique({
-      where: { collectionId_cardId: { collectionId, cardId } },
-      select: { quantity: true },
+    const condition_ = condition ?? "Near Mint";
+
+    // Check for existing variant (same card + language + foil + condition)
+    const existing = await prisma.collectionCard.findFirst({
+      where: { collectionId, cardId, language, foil, condition: condition_ },
+      select: { id: true, quantity: true },
     });
+
+    // Check freemium limit (account for existing quantity if updating)
     const limitCheck = await checkFreemiumLimit(userId, quantity, existing?.quantity ?? 0);
     if (!limitCheck.success) {
       return { success: false, error: limitCheck.error };
     }
 
-    const collectionCard = await prisma.collectionCard.upsert({
-      where: { collectionId_cardId: { collectionId, cardId } },
-      create: { collectionId, cardId, quantity, condition, notes },
-      update: { quantity, condition, notes },
-      select: { id: true },
-    });
-    return { success: true, data: collectionCard };
+    if (existing) {
+      const updated = await prisma.collectionCard.update({
+        where: { id: existing.id },
+        data: { quantity, notes },
+        select: { id: true },
+      });
+      return { success: true, data: updated };
+    } else {
+      const created = await prisma.collectionCard.create({
+        data: { collectionId, cardId, quantity, condition: condition_, language, foil, notes },
+        select: { id: true },
+      });
+      return { success: true, data: created };
+    }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error : new Error("Failed to add card") };
   }
@@ -239,6 +252,7 @@ export async function matchAndImportCards(
   gameType: string,
   rows: ImportRow[],
   parseErrors: string[] = [],
+  language = "EN",
 ): Promise<Result<ImportResult>> {
   try {
     // Check freemium limit for the batch
@@ -281,21 +295,30 @@ export async function matchAndImportCards(
         continue;
       }
 
-      await prisma.collectionCard.upsert({
-        where: { collectionId_cardId: { collectionId, cardId } },
-        create: {
-          collectionId,
-          cardId,
-          quantity: row.quantity,
-          condition: row.condition,
-          notes: row.notes,
-        },
-        update: {
-          quantity: row.quantity,
-          condition: row.condition,
-          notes: row.notes,
-        },
+      const condition_ = row.condition ?? "Near Mint";
+      const existing = await prisma.collectionCard.findFirst({
+        where: { collectionId, cardId, language, foil: false, condition: condition_ },
+        select: { id: true },
       });
+
+      if (existing) {
+        await prisma.collectionCard.update({
+          where: { id: existing.id },
+          data: { quantity: row.quantity, notes: row.notes },
+        });
+      } else {
+        await prisma.collectionCard.create({
+          data: {
+            collectionId,
+            cardId,
+            quantity: row.quantity,
+            condition: condition_,
+            language,
+            foil: false,
+            notes: row.notes,
+          },
+        });
+      }
       imported++;
     }
 

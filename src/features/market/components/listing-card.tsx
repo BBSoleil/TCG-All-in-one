@@ -51,9 +51,18 @@ export function ListingCard({ listing }: { listing: ListingItem }) {
                   {GAME_LABELS[listing.card.gameType as keyof typeof GAME_LABELS] ?? listing.card.gameType}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">{listing.condition}</Badge>
+                <Badge variant="outline" className="text-[10px]">{listing.language}</Badge>
                 {listing.isTradeOnly && <Badge variant="outline" className="text-[10px]">Trade Only</Badge>}
                 {listing.quantity > 1 && (
                   <Badge variant="outline" className="text-[10px]">x{listing.quantity}</Badge>
+                )}
+                {listing.photos.length > 0 && (
+                  <Badge variant="outline" className="text-[10px]">📷 {listing.photos.length}</Badge>
+                )}
+                {listing.shippingZones.length > 0 && (
+                  <Badge variant="outline" className="text-[10px]">
+                    Ships: {listing.shippingZones.map((sz) => sz.zone === "WORLDWIDE" ? "🌍" : sz.zone === "EU" ? "🇪🇺" : "🏠").join("")}
+                  </Badge>
                 )}
               </div>
             </div>
@@ -62,7 +71,7 @@ export function ListingCard({ listing }: { listing: ListingItem }) {
             <div className="mt-3 space-y-2">
               <div className="flex items-end justify-between">
                 <span className="text-xl font-bold text-primary">
-                  {listing.isTradeOnly ? "Trade" : formatPrice(listing.price)}
+                  {listing.isTradeOnly ? "Trade" : formatPrice(listing.price, listing.currency)}
                 </span>
               </div>
 

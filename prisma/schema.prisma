@@ -221,14 +221,20 @@ model CollectionCard {
   collectionId String
   cardId       String
   quantity     Int      @default(1)
-  condition    String?  // Mint, Near Mint, Lightly Played, etc.
+  condition    String   @default("Near Mint") // Mint, Near Mint, Lightly Played, etc.
+  language     String   @default("EN")        // EN, FR, JP, DE, ES, IT, PT, KO, ZH_HANS, ZH_HANT
+  foil         Boolean  @default(false)
+  forSale      Boolean  @default(false)
+  forTrade     Boolean  @default(false)
+  acquiredPrice Decimal? @db.Decimal(10, 2)
+  acquiredAt   DateTime?
   notes        String?
   addedAt      DateTime @default(now())
 
   collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   card       Card       @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
-  @@unique([collectionId, cardId])
+  @@unique([collectionId, cardId, language, foil, condition])
   @@index([collectionId])
   @@index([cardId])
   @@map("collection_cards")
@@ -340,6 +346,7 @@ enum OfferStatus {
   DECLINED
   COUNTERED
   WITHDRAWN
+  EXPIRED
 }
 
 model Listing {
@@ -347,7 +354,10 @@ model Listing {
   userId      String
   cardId      String
   price       Decimal       @db.Decimal(10, 2)
+  currency    String        @default("EUR") // EUR | USD
   condition   String        // Mint, Near Mint, Lightly Played, etc.
+  language    String        @default("EN")  // Card language
+  photos      String[]      // Vercel Blob URLs, 0-6 images
   description String?
   quantity    Int           @default(1)
   isTradeOnly Boolean       @default(false)
@@ -355,10 +365,11 @@ model Listing {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  card         Card          @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  offers       Offer[]
-  transactions Transaction[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card          Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  offers        Offer[]
+  transactions  Transaction[]
+  shippingZones ShippingZone[]
 
   @@index([userId])
   @@index([cardId])
@@ -375,6 +386,7 @@ model Offer {
   price     Decimal     @db.Decimal(10, 2)
   message   String?
   status    OfferStatus @default(PENDING)
+  expiresAt DateTime?   // Auto-set to createdAt + 48h
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -384,7 +396,24 @@ model Offer {
   @@index([listingId])
   @@index([buyerId])
   @@index([status])
+  @@index([status, expiresAt])
   @@map("offers")
+}
+
+model ShippingZone {
+  id            String  @id @default(cuid())
+  listingId     String
+  zone          String  // DOMESTIC | EU | WORLDWIDE
+  price         Decimal @db.Decimal(10, 2)
+  currency      String  @default("EUR") // EUR | USD
+  estimatedMin  Int     // Minimum estimated delivery days
+  estimatedMax  Int     // Maximum estimated delivery days
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, zone])
+  @@index([listingId])
+  @@map("shipping_zones")
 }
 
 model Transaction {

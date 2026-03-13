@@ -35,6 +35,9 @@ export const mockPrisma = {
   portfolioSnapshot: createModelMock(),
   userRating: createModelMock(),
   notification: createModelMock(),
+  shippingZone: createModelMock(),
+  priceHistory: createModelMock(),
+  savedSearch: createModelMock(),
   $transaction: vi.fn(),
   $queryRawUnsafe: vi.fn().mockResolvedValue([]),
 };

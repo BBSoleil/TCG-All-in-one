@@ -75,9 +75,17 @@ export function CollectionCardList({
                 </Badge>
               )}
             </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              <Badge variant="outline" className="text-[10px]">{entry.language}</Badge>
+              {entry.foil && (
+                <Badge variant="outline" className="text-[10px] border-yellow-500/50 text-yellow-400">
+                  ✦ Foil
+                </Badge>
+              )}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
               <span>Qty: {entry.quantity}</span>
-              {entry.condition && <span>{entry.condition}</span>}
+              <span>{entry.condition}</span>
             </div>
             <Button
               variant="ghost"

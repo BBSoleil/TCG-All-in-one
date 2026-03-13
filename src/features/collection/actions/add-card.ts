@@ -20,6 +20,8 @@ export async function addCard(
     cardId: formData.get("cardId"),
     quantity: formData.get("quantity"),
     condition: formData.get("condition") || undefined,
+    language: formData.get("language") || undefined,
+    foil: formData.get("foil") || undefined,
     notes: formData.get("notes") || undefined,
   };
 
@@ -41,6 +43,8 @@ export async function addCard(
     parsed.data.quantity,
     parsed.data.condition,
     parsed.data.notes,
+    parsed.data.language,
+    parsed.data.foil,
   );
 
   if (!result.success) {

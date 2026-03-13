@@ -13,14 +13,26 @@ export interface MarketData {
 
 // Marketplace types
 
+export interface ShippingZoneItem {
+  zone: string;
+  price: number;
+  currency: string;
+  estimatedMin: number;
+  estimatedMax: number;
+}
+
 export interface ListingItem {
   id: string;
   price: number;
+  currency: string;
+  language: string;
+  photos: string[];
   condition: string;
   description: string | null;
   quantity: number;
   isTradeOnly: boolean;
   status: string;
+  shippingZones: ShippingZoneItem[];
   createdAt: Date;
   seller: {
     id: string;
@@ -44,6 +56,7 @@ export interface OfferItem {
   price: number;
   message: string | null;
   status: string;
+  expiresAt: Date | null;
   createdAt: Date;
   buyer: {
     id: string;
@@ -94,10 +107,14 @@ export {
   updateListingPriceSchema,
   makeOfferSchema,
   rateTransactionSchema,
+  CURRENCY_OPTIONS,
+  SHIPPING_ZONE_OPTIONS,
+  LISTING_LANGUAGE_OPTIONS,
 } from "./schemas";
 export type {
   CreateListingInput,
   UpdateListingPriceInput,
   MakeOfferInput,
   RateTransactionInput,
+  ShippingZoneInput,
 } from "./schemas";

@@ -29,12 +29,13 @@ describe("makeOffer", () => {
       expect(result.data.id).toBe("offer-1");
     }
     expect(mockPrisma.offer.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         listingId: "listing-1",
         buyerId: "buyer-1",
         price: 20,
         message: "Interested!",
-      },
+        expiresAt: expect.any(Date),
+      }),
       select: { id: true },
     });
   });
