@@ -234,6 +234,31 @@ export async function removeCardFromCollection(
   }
 }
 
+export async function updateCollectionCardFlags(
+  id: string,
+  userId: string,
+  flags: { forSale?: boolean; forTrade?: boolean },
+): Promise<Result<{ id: string }>> {
+  try {
+    const existing = await prisma.collectionCard.findUnique({
+      where: { id },
+      include: { collection: { select: { userId: true } } },
+    });
+    if (!existing || existing.collection.userId !== userId) {
+      return { success: false, error: new Error("Card not found in collection") };
+    }
+
+    const updated = await prisma.collectionCard.update({
+      where: { id },
+      data: flags,
+      select: { id: true },
+    });
+    return { success: true, data: updated };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error : new Error("Failed to update card flags") };
+  }
+}
+
 export interface ImportRow {
   name: string;
   quantity: number;

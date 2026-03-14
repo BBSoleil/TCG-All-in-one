@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -128,6 +128,40 @@ export function CollectionDetailClient({
 
   const { collection, cards, total, totalPages, collectionValue, completion } = data;
 
+  // Client-side filters
+  const [filterLang, setFilterLang] = useState<string>("");
+  const [filterCondition, setFilterCondition] = useState<string>("");
+  const [filterFoil, setFilterFoil] = useState<string>("");
+  const [filterForSale, setFilterForSale] = useState(false);
+  const [filterForTrade, setFilterForTrade] = useState(false);
+
+  const hasActiveFilters = filterLang || filterCondition || filterFoil || filterForSale || filterForTrade;
+
+  const filteredCards = useMemo(() => {
+    if (!hasActiveFilters) return cards;
+    return cards.filter((c) => {
+      if (filterLang && c.language !== filterLang) return false;
+      if (filterCondition && c.condition !== filterCondition) return false;
+      if (filterFoil === "yes" && !c.foil) return false;
+      if (filterFoil === "no" && c.foil) return false;
+      if (filterForSale && !c.forSale) return false;
+      if (filterForTrade && !c.forTrade) return false;
+      return true;
+    });
+  }, [cards, filterLang, filterCondition, filterFoil, filterForSale, filterForTrade, hasActiveFilters]);
+
+  // Derive unique values from current page cards for dropdown options
+  const languages = useMemo(() => [...new Set(cards.map((c) => c.language))].sort(), [cards]);
+  const conditions = useMemo(() => [...new Set(cards.map((c) => c.condition))].sort(), [cards]);
+
+  function clearFilters() {
+    setFilterLang("");
+    setFilterCondition("");
+    setFilterFoil("");
+    setFilterForSale(false);
+    setFilterForTrade(false);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -203,6 +237,66 @@ export function CollectionDetailClient({
         </Card>
       )}
 
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-3">
+        <select
+          value={filterLang}
+          onChange={(e) => setFilterLang(e.target.value)}
+          className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+        >
+          <option value="">All Languages</option>
+          {languages.map((l) => (
+            <option key={l} value={l}>{l}</option>
+          ))}
+        </select>
+        <select
+          value={filterCondition}
+          onChange={(e) => setFilterCondition(e.target.value)}
+          className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+        >
+          <option value="">All Conditions</option>
+          {conditions.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <select
+          value={filterFoil}
+          onChange={(e) => setFilterFoil(e.target.value)}
+          className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+        >
+          <option value="">All (Foil/Non-foil)</option>
+          <option value="yes">Foil only</option>
+          <option value="no">Non-foil only</option>
+        </select>
+        <label className="flex items-center gap-1 text-xs">
+          <input
+            type="checkbox"
+            checked={filterForSale}
+            onChange={(e) => setFilterForSale(e.target.checked)}
+            className="rounded"
+          />
+          For Sale
+        </label>
+        <label className="flex items-center gap-1 text-xs">
+          <input
+            type="checkbox"
+            checked={filterForTrade}
+            onChange={(e) => setFilterForTrade(e.target.checked)}
+            className="rounded"
+          />
+          For Trade
+        </label>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="xs" onClick={clearFilters}>
+            Clear filters
+          </Button>
+        )}
+        {hasActiveFilters && (
+          <span className="text-xs text-muted-foreground">
+            {filteredCards.length} of {cards.length} on this page
+          </span>
+        )}
+      </div>
+
       {loading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -211,7 +305,7 @@ export function CollectionDetailClient({
         </div>
       ) : (
         <CollectionCardList
-          cards={cards}
+          cards={filteredCards}
           collectionId={id}
           onCardRemoved={refetch}
         />

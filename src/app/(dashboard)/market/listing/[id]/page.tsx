@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GAME_LABELS } from "@/shared/types";
 import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
+import { ListingPhotoGallery } from "./listing-photo-gallery";
 
 export default async function ListingDetailPage({
   params,
@@ -43,13 +44,20 @@ export default async function ListingDetailPage({
       <Card>
         <CardContent className="pt-6">
           <div className="flex gap-4">
-            <CardImage
-              src={listing.card.imageUrl}
-              alt={listing.card.name}
-              gameType={listing.card.gameType}
-              rarity={listing.card.rarity}
-              size="medium"
-            />
+            {listing.photos.length > 0 ? (
+              <ListingPhotoGallery
+                photos={listing.photos}
+                alt={listing.card.name}
+              />
+            ) : (
+              <CardImage
+                src={listing.card.imageUrl}
+                alt={listing.card.name}
+                gameType={listing.card.gameType}
+                rarity={listing.card.rarity}
+                size="medium"
+              />
+            )}
             <div className="flex-1">
               <h1 className="text-xl font-bold">{listing.card.name}</h1>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -57,13 +65,14 @@ export default async function ListingDetailPage({
                   {GAME_LABELS[listing.card.gameType as keyof typeof GAME_LABELS] ?? listing.card.gameType}
                 </Badge>
                 <Badge variant="outline">{listing.condition}</Badge>
+                <Badge variant="outline">{listing.language}</Badge>
                 {listing.isTradeOnly && <Badge variant="outline">Trade Only</Badge>}
                 <Badge variant={listing.status === "ACTIVE" ? "default" : "secondary"}>
                   {listing.status}
                 </Badge>
               </div>
               <p className="mt-3 text-2xl font-bold">
-                {listing.isTradeOnly ? "Trade Only" : formatPrice(listing.price)}
+                {listing.isTradeOnly ? "Trade Only" : formatPrice(listing.price, listing.currency)}
               </p>
               {listing.quantity > 1 && (
                 <p className="text-sm text-muted-foreground">Quantity: {listing.quantity}</p>
@@ -87,6 +96,41 @@ export default async function ListingDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      {listing.shippingZones.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Shipping</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {listing.shippingZones.map((zone) => (
+                <div key={zone.zone} className="flex items-center justify-between rounded-md border border-border p-3">
+                  <div>
+                    <p className="text-sm font-medium">{zone.zone}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {zone.estimatedMin}–{zone.estimatedMax} days
+                    </p>
+                  </div>
+                  <p className="text-sm font-medium">
+                    {formatPrice(zone.price, zone.currency)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {listing.shippingZones.length === 0 && !listing.isTradeOnly && (
+        <Card>
+          <CardContent className="py-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Contact seller for shipping details
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {!isOwner && listing.status === "ACTIVE" && (
         <Card>
