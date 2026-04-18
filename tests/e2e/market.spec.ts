@@ -1,15 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+// /market is behind middleware matcher — unauthenticated users get redirected
+// to /login. Authenticated-user flow is not covered here (no seeded listings in
+// the CI DB); it's reserved for a separate integration test.
 test.describe("Marketplace", () => {
-  test("marketplace page loads", async ({ page }) => {
+  test("market page redirects unauthenticated users to login", async ({ page }) => {
     await page.goto("/market");
-    await expect(page.locator("h1")).toContainText(/market/i);
-  });
-
-  test("marketplace shows listing cards or empty state", async ({ page }) => {
-    await page.goto("/market");
-    // Either shows listing cards or empty state message
-    const content = page.locator("main, [role=main]").first();
-    await expect(content).toBeVisible();
+    await page.waitForURL(/\/login/);
+    expect(page.url()).toContain("login");
   });
 });

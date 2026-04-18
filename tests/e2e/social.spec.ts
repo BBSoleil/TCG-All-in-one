@@ -7,9 +7,8 @@ test.describe("Social", () => {
     expect(page.url()).toContain("login");
   });
 
-  test("leaderboards page redirects unauthenticated users", async ({ page }) => {
-    await page.goto("/leaderboards");
-    await page.waitForURL(/\/(login|api\/auth)/);
-    expect(page.url()).toContain("login");
+  test("leaderboards page is publicly accessible", async ({ page }) => {
+    const resp = await page.goto("/leaderboards");
+    expect(resp?.status()).toBe(200);
   });
 });

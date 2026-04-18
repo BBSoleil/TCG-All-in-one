@@ -67,7 +67,11 @@ test.describe("Post-login smoke", () => {
     await signupFreshUser(page);
     const resp = await page.goto("/billing");
     expect(resp?.status()).toBe(200);
-    await expect(page.getByText(/0 of 2,?000 cards/i)).toBeVisible();
+    // Usage card is the first "0 of 2,000 cards..." — Rookie plan card also
+    // mentions "2,000 cards" so scope to the card description
+    await expect(
+      page.getByText(/0 of 2[\s,]?000 cards tracked/i),
+    ).toBeVisible();
   });
 
   test("create a collection → appears in list (P0.1 + P0.2)", async ({ page }) => {

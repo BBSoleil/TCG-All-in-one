@@ -5,7 +5,7 @@ test.describe("Authentication", () => {
     await page.goto("/login");
     await expect(page.locator("input[name=email]")).toBeVisible();
     await expect(page.locator("input[name=password]")).toBeVisible();
-    await expect(page.locator("button[type=submit]")).toBeVisible();
+    await expect(page.locator("form").first().locator("button[type=submit]")).toBeVisible();
   });
 
   test("unauthenticated user is redirected from dashboard", async ({ page }) => {
