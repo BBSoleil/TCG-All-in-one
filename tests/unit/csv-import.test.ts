@@ -8,8 +8,8 @@ describe("parseCSV", () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data.rows).toHaveLength(2);
-    expect(result.data.rows[0]).toEqual({ name: "Pikachu", quantity: 3, condition: null, notes: null });
-    expect(result.data.rows[1]).toEqual({ name: "Charizard", quantity: 1, condition: null, notes: null });
+    expect(result.data.rows[0]).toEqual({ name: "Pikachu", quantity: 3, condition: null, notes: null, language: null, foil: false });
+    expect(result.data.rows[1]).toEqual({ name: "Charizard", quantity: 1, condition: null, notes: null, language: null, foil: false });
   });
 
   it("defaults quantity to 1 when no quantity column", () => {
@@ -84,6 +84,35 @@ describe("parseCSV", () => {
     expect(result.data.rows[0]?.name).toBe("Pikachu");
     expect(result.data.rows[0]?.quantity).toBe(2);
     expect(result.data.rows[0]?.condition).toBe("Mint");
+  });
+
+  it("parses language column", () => {
+    const csv = "Name,Quantity,Language\nPikachu,1,JP\nCharizard,2,fr";
+    const result = parseCSV(csv);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.rows[0]?.language).toBe("JP");
+    expect(result.data.rows[1]?.language).toBe("FR");
+  });
+
+  it("parses foil column with various truthy values", () => {
+    const csv = "Name,Quantity,Foil\nPikachu,1,true\nCharizard,2,yes\nBlastoise,1,1\nVenusaur,1,no";
+    const result = parseCSV(csv);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.rows[0]?.foil).toBe(true);
+    expect(result.data.rows[1]?.foil).toBe(true);
+    expect(result.data.rows[2]?.foil).toBe(true);
+    expect(result.data.rows[3]?.foil).toBe(false);
+  });
+
+  it("defaults language to null and foil to false when columns missing", () => {
+    const csv = "Name,Quantity\nPikachu,1";
+    const result = parseCSV(csv);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.rows[0]?.language).toBeNull();
+    expect(result.data.rows[0]?.foil).toBe(false);
   });
 
   it("handles Windows-style line endings", () => {

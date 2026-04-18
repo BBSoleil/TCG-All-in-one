@@ -5,6 +5,8 @@ export interface CSVImportRow {
   quantity: number;
   condition: string | null;
   notes: string | null;
+  language: string | null;
+  foil: boolean;
 }
 
 export interface CSVImportResult {
@@ -31,6 +33,8 @@ export function parseCSV(content: string): Result<CSVImportResult> {
     const qtyIdx = headers.findIndex((h) => h === "quantity");
     const condIdx = headers.findIndex((h) => h === "condition");
     const notesIdx = headers.findIndex((h) => h === "notes");
+    const langIdx = headers.findIndex((h) => h === "language");
+    const foilIdx = headers.findIndex((h) => h === "foil");
 
     const rows: CSVImportRow[] = [];
     const errors: string[] = [];
@@ -54,11 +58,14 @@ export function parseCSV(content: string): Result<CSVImportResult> {
         continue;
       }
 
+      const foilStr = foilIdx >= 0 ? fields[foilIdx]?.trim().toLowerCase() : "";
       rows.push({
         name,
         quantity,
         condition: condIdx >= 0 ? fields[condIdx]?.trim() || null : null,
         notes: notesIdx >= 0 ? fields[notesIdx]?.trim() || null : null,
+        language: langIdx >= 0 ? fields[langIdx]?.trim().toUpperCase() || null : null,
+        foil: foilStr === "true" || foilStr === "yes" || foilStr === "1",
       });
     }
 
