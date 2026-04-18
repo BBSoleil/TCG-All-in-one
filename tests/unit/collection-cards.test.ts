@@ -322,8 +322,8 @@ describe("matchAndImportCards", () => {
     mockPrisma.collectionCard.create.mockResolvedValue({ id: "cc-1" });
 
     const rows = [
-      { name: "charizard", quantity: 2, condition: "Near Mint", notes: null },
-      { name: "PIKACHU", quantity: 1, condition: null, notes: "foil" },
+      { name: "charizard", quantity: 2, condition: "Near Mint", notes: null, language: null, foil: false },
+      { name: "PIKACHU", quantity: 1, condition: null, notes: "foil", language: null, foil: false },
     ];
 
     const result = await matchAndImportCards("col-1", "POKEMON", rows);
@@ -344,8 +344,8 @@ describe("matchAndImportCards", () => {
     mockPrisma.collectionCard.create.mockResolvedValue({ id: "cc-1" });
 
     const rows = [
-      { name: "Charizard", quantity: 1, condition: null, notes: null },
-      { name: "Blastoise", quantity: 1, condition: null, notes: null },
+      { name: "Charizard", quantity: 1, condition: null, notes: null, language: null, foil: false },
+      { name: "Blastoise", quantity: 1, condition: null, notes: null, language: null, foil: false },
     ];
 
     const result = await matchAndImportCards("col-1", "POKEMON", rows);
@@ -375,8 +375,8 @@ describe("matchAndImportCards", () => {
     mockPrisma.collectionCard.create.mockResolvedValue({ id: "cc-1" });
 
     const rows = [
-      { name: "Charizard", quantity: 1, condition: null, notes: null },
-      { name: "Charizard", quantity: 2, condition: null, notes: null },
+      { name: "Charizard", quantity: 1, condition: null, notes: null, language: null, foil: false },
+      { name: "Charizard", quantity: 2, condition: null, notes: null, language: null, foil: false },
     ];
 
     await matchAndImportCards("col-1", "POKEMON", rows);
@@ -391,7 +391,7 @@ describe("matchAndImportCards", () => {
     mockPrisma.card.findMany.mockRejectedValue(new Error("DB error"));
 
     const result = await matchAndImportCards("col-1", "POKEMON", [
-      { name: "Charizard", quantity: 1, condition: null, notes: null },
+      { name: "Charizard", quantity: 1, condition: null, notes: null, language: null, foil: false },
     ]);
 
     expect(result.success).toBe(false);
@@ -405,6 +405,8 @@ describe("matchAndImportCards", () => {
       quantity: 1,
       condition: null,
       notes: null,
+      language: null,
+      foil: false,
     }));
 
     const result = await matchAndImportCards("col-1", "POKEMON", rows);
@@ -420,7 +422,7 @@ describe("matchAndImportCards", () => {
     mockPrisma.card.findMany.mockResolvedValue([{ id: "card-1", name: "Charizard" }]);
     mockPrisma.collectionCard.create.mockResolvedValue({ id: "cc-1" });
 
-    const rows = [{ name: "Charizard", quantity: 1, condition: null, notes: null }];
+    const rows = [{ name: "Charizard", quantity: 1, condition: null, notes: null, language: null, foil: false }];
     const result = await matchAndImportCards("col-1", "POKEMON", rows);
 
     expect(result.success).toBe(true);

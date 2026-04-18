@@ -19,7 +19,7 @@ export function SignupForm() {
 
   useEffect(() => {
     if (state.success) {
-      router.push("/login");
+      router.push("/dashboard");
     }
   }, [state.success, router]);
 

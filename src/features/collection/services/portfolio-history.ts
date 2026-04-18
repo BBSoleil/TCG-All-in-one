@@ -17,9 +17,9 @@ export async function recordPortfolioSnapshot(
       SELECT
         COALESCE(SUM(cc.quantity * c."marketPrice"), 0)::float as "totalValue",
         COALESCE(SUM(cc.quantity), 0)::int as "cardCount"
-      FROM "CollectionCard" cc
-      JOIN "Card" c ON c.id = cc."cardId"
-      JOIN "Collection" col ON col.id = cc."collectionId"
+      FROM "collection_cards" cc
+      JOIN "cards" c ON c.id = cc."cardId"
+      JOIN "collections" col ON col.id = cc."collectionId"
       WHERE col."userId" = $1
     `, userId);
 

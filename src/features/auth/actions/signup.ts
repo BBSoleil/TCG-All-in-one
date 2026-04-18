@@ -1,6 +1,8 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { AuthError } from "next-auth";
+import { signIn } from "@/auth";
 import { prisma } from "@/shared/lib/prisma";
 import { signupSchema } from "@/features/auth/schemas";
 import type { AuthActionState } from "@/features/auth/types";
@@ -40,9 +42,22 @@ export async function signup(
     await prisma.user.create({
       data: { name, email, passwordHash },
     });
-
-    return { success: true };
   } catch {
     return { error: "Something went wrong. Please try again." };
   }
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: "/dashboard",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { success: true };
+    }
+    throw error;
+  }
+
+  return { success: true };
 }

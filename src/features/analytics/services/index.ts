@@ -11,9 +11,9 @@ export async function getAnalytics(userId: string): Promise<Result<AnalyticsData
         SELECT c."gameType" as "gameType",
                SUM(cc.quantity)::int as "cardCount",
                COALESCE(SUM(cc.quantity * c."marketPrice"), 0)::float as "totalValue"
-        FROM "CollectionCard" cc
-        JOIN "Card" c ON c.id = cc."cardId"
-        JOIN "Collection" col ON col.id = cc."collectionId"
+        FROM "collection_cards" cc
+        JOIN "cards" c ON c.id = cc."cardId"
+        JOIN "collections" col ON col.id = cc."collectionId"
         WHERE col."userId" = $1
         GROUP BY c."gameType"
         ORDER BY "totalValue" DESC
@@ -22,9 +22,9 @@ export async function getAnalytics(userId: string): Promise<Result<AnalyticsData
       prisma.$queryRawUnsafe<{ rarity: string; count: number }[]>(`
         SELECT COALESCE(c.rarity::text, 'Unknown') as rarity,
                SUM(cc.quantity)::int as count
-        FROM "CollectionCard" cc
-        JOIN "Card" c ON c.id = cc."cardId"
-        JOIN "Collection" col ON col.id = cc."collectionId"
+        FROM "collection_cards" cc
+        JOIN "cards" c ON c.id = cc."cardId"
+        JOIN "collections" col ON col.id = cc."collectionId"
         WHERE col."userId" = $1
         GROUP BY c.rarity
         ORDER BY count DESC
@@ -35,9 +35,9 @@ export async function getAnalytics(userId: string): Promise<Result<AnalyticsData
                c."imageUrl" as "imageUrl", c."marketPrice"::float as "marketPrice",
                SUM(cc.quantity)::int as quantity,
                (SUM(cc.quantity) * c."marketPrice")::float as "totalValue"
-        FROM "CollectionCard" cc
-        JOIN "Card" c ON c.id = cc."cardId"
-        JOIN "Collection" col ON col.id = cc."collectionId"
+        FROM "collection_cards" cc
+        JOIN "cards" c ON c.id = cc."cardId"
+        JOIN "collections" col ON col.id = cc."collectionId"
         WHERE col."userId" = $1 AND c."marketPrice" IS NOT NULL AND c."marketPrice" > 0
         GROUP BY c.id
         ORDER BY "totalValue" DESC
@@ -49,9 +49,9 @@ export async function getAnalytics(userId: string): Promise<Result<AnalyticsData
           COALESCE(SUM(cc.quantity), 0)::int as "totalCardCopies",
           COUNT(DISTINCT cc."cardId")::int as "totalUniqueCards",
           COALESCE(SUM(cc.quantity * c."marketPrice"), 0)::float as "totalValue"
-        FROM "CollectionCard" cc
-        JOIN "Card" c ON c.id = cc."cardId"
-        JOIN "Collection" col ON col.id = cc."collectionId"
+        FROM "collection_cards" cc
+        JOIN "cards" c ON c.id = cc."cardId"
+        JOIN "collections" col ON col.id = cc."collectionId"
         WHERE col."userId" = $1
       `, userId),
       prisma.collection.count({ where: { userId } }),

@@ -3,7 +3,7 @@ import type { GameType as PrismaGameType } from "@/generated/prisma/client";
 import type { Result } from "@/shared/types";
 
 // Re-export split modules so all existing imports continue to work
-export { getCollectionCards, getAllCollectionCards, addCardToCollection, updateCollectionCard, updateCollectionCardFlags, removeCardFromCollection, matchAndImportCards } from "./collection-cards";
+export { getCollectionCards, getAllCollectionCards, addCardToCollection, updateCollectionCard, updateCollectionCardFlags, removeCardFromCollection, matchAndImportCards, getUserTotalCardCount } from "./collection-cards";
 export type { ImportRow, ImportResult } from "./collection-cards";
 export { getDashboardStats, getSetCompletion } from "./stats";
 
@@ -61,9 +61,9 @@ export async function getUserCollections(
       prisma.$queryRawUnsafe<{ collectionId: string; value: number }[]>(
         `SELECT col.id as "collectionId",
                 COALESCE(SUM(cc.quantity * COALESCE(c."marketPrice", 0)), 0)::float as value
-         FROM "Collection" col
-         LEFT JOIN "CollectionCard" cc ON cc."collectionId" = col.id
-         LEFT JOIN "Card" c ON c.id = cc."cardId"
+         FROM "collections" col
+         LEFT JOIN "collection_cards" cc ON cc."collectionId" = col.id
+         LEFT JOIN "cards" c ON c.id = cc."cardId"
          WHERE col."userId" = $1
          GROUP BY col.id`,
         userId,

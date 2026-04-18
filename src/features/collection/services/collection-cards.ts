@@ -10,8 +10,8 @@ const CARDS_PER_PAGE = 24;
 export async function getUserTotalCardCount(userId: string): Promise<number> {
   const result = await prisma.$queryRawUnsafe<{ total: number }[]>(
     `SELECT COALESCE(SUM(cc.quantity), 0)::int as total
-     FROM "CollectionCard" cc
-     JOIN "Collection" col ON col.id = cc."collectionId"
+     FROM "collection_cards" cc
+     JOIN "collections" col ON col.id = cc."collectionId"
      WHERE col."userId" = $1`,
     userId,
   );
@@ -79,8 +79,8 @@ export async function getCollectionCards(
       prisma.collectionCard.count({ where: { collectionId } }),
       prisma.$queryRawUnsafe<{ value: number }[]>(
         `SELECT COALESCE(SUM(cc.quantity * COALESCE(c."marketPrice", 0)), 0)::float as value
-         FROM "CollectionCard" cc
-         JOIN "Card" c ON c.id = cc."cardId"
+         FROM "collection_cards" cc
+         JOIN "cards" c ON c.id = cc."cardId"
          WHERE cc."collectionId" = $1`,
         collectionId,
       ),
@@ -140,6 +140,8 @@ export async function addCardToCollection(
   notes?: string,
   language = "EN",
   foil = false,
+  acquiredPrice?: number,
+  acquiredAt?: string,
 ): Promise<Result<{ id: string }>> {
   try {
     const collection = await prisma.collection.findFirst({
@@ -177,7 +179,11 @@ export async function addCardToCollection(
       return { success: true, data: updated };
     } else {
       const created = await prisma.collectionCard.create({
-        data: { collectionId, cardId, quantity, condition: condition_, language, foil, notes },
+        data: {
+          collectionId, cardId, quantity, condition: condition_, language, foil, notes,
+          ...(acquiredPrice !== undefined && { acquiredPrice }),
+          ...(acquiredAt && { acquiredAt: new Date(acquiredAt) }),
+        },
         select: { id: true },
       });
       return { success: true, data: created };
@@ -264,6 +270,8 @@ export interface ImportRow {
   quantity: number;
   condition: string | null;
   notes: string | null;
+  language: string | null;
+  foil: boolean;
 }
 
 export interface ImportResult {
@@ -321,8 +329,10 @@ export async function matchAndImportCards(
       }
 
       const condition_ = row.condition ?? "Near Mint";
+      const rowLanguage = row.language ?? language;
+      const rowFoil = row.foil;
       const existing = await prisma.collectionCard.findFirst({
-        where: { collectionId, cardId, language, foil: false, condition: condition_ },
+        where: { collectionId, cardId, language: rowLanguage, foil: rowFoil, condition: condition_ },
         select: { id: true },
       });
 
@@ -338,8 +348,8 @@ export async function matchAndImportCards(
             cardId,
             quantity: row.quantity,
             condition: condition_,
-            language,
-            foil: false,
+            language: rowLanguage,
+            foil: rowFoil,
             notes: row.notes,
           },
         });

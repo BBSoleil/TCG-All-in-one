@@ -52,7 +52,7 @@ export async function getTopPriceMovers(limit = 10): Promise<Result<PriceMover[]
         END as "changePercent"
       FROM recent r
       JOIN older o ON o."cardId" = r."cardId"
-      JOIN "Card" c ON c.id = r."cardId"
+      JOIN "cards" c ON c.id = r."cardId"
       WHERE o."previousPrice" > 0 AND r."currentPrice" != o."previousPrice"
       ORDER BY ABS(r."currentPrice" - o."previousPrice") DESC
       LIMIT $1`,
@@ -76,8 +76,8 @@ export async function getMarketOverview(): Promise<Result<MarketOverviewData>> {
         `SELECT c."gameType",
                 AVG(l.price)::float as "avgPrice",
                 COUNT(*)::int as "listingCount"
-         FROM "Listing" l
-         JOIN "Card" c ON c.id = l."cardId"
+         FROM "listings" l
+         JOIN "cards" c ON c.id = l."cardId"
          WHERE l.status = 'ACTIVE'
          GROUP BY c."gameType"
          ORDER BY "listingCount" DESC`,
@@ -85,8 +85,8 @@ export async function getMarketOverview(): Promise<Result<MarketOverviewData>> {
       prisma.$queryRawUnsafe<{ cardId: string; cardName: string; gameType: string; imageUrl: string | null; listingCount: number }[]>(
         `SELECT c.id as "cardId", c.name as "cardName", c."gameType", c."imageUrl",
                 COUNT(l.id)::int as "listingCount"
-         FROM "Listing" l
-         JOIN "Card" c ON c.id = l."cardId"
+         FROM "listings" l
+         JOIN "cards" c ON c.id = l."cardId"
          WHERE l.status = 'ACTIVE'
          GROUP BY c.id, c.name, c."gameType", c."imageUrl"
          ORDER BY "listingCount" DESC

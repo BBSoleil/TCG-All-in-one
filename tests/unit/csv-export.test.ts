@@ -7,6 +7,10 @@ function makeCard(overrides: Partial<CollectionCardWithDetails> = {}): Collectio
     id: "cc-1",
     quantity: 1,
     condition: "Near Mint",
+    language: "EN",
+    foil: false,
+    forSale: false,
+    forTrade: false,
     notes: null,
     addedAt: new Date("2024-01-01"),
     card: {
@@ -68,9 +72,9 @@ describe("generateCSV", () => {
     expect(csv).toContain('"Card says ""hello"""');
   });
 
-  it("handles null set, rarity, condition, and notes", () => {
+  it("handles null set, rarity and empty condition/notes", () => {
     const card = makeCard({
-      condition: null,
+      condition: "",
       notes: null,
       card: {
         ...makeCard().card,

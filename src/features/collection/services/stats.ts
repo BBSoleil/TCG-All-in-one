@@ -13,7 +13,7 @@ export async function getDashboardStats(userId: string): Promise<
     const [gameRows, summaryRows] = await Promise.all([
       prisma.$queryRawUnsafe<{ gameType: string; count: number }[]>(
         `SELECT "gameType", COUNT(*)::int as count
-         FROM "Collection"
+         FROM "collections"
          WHERE "userId" = $1
          GROUP BY "gameType"`,
         userId,
@@ -23,9 +23,9 @@ export async function getDashboardStats(userId: string): Promise<
            COUNT(DISTINCT col.id)::int as "totalCollections",
            COALESCE(SUM(cc.quantity), 0)::int as "totalCards",
            COALESCE(SUM(cc.quantity * COALESCE(c."marketPrice", 0)), 0)::float as "portfolioValue"
-         FROM "Collection" col
-         LEFT JOIN "CollectionCard" cc ON cc."collectionId" = col.id
-         LEFT JOIN "Card" c ON c.id = cc."cardId"
+         FROM "collections" col
+         LEFT JOIN "collection_cards" cc ON cc."collectionId" = col.id
+         LEFT JOIN "cards" c ON c.id = cc."cardId"
          WHERE col."userId" = $1`,
         userId,
       ),
@@ -56,7 +56,7 @@ export async function getSetCompletion(
     // When gameType is provided, skip the correlated subquery on 90k cards
     const gameTypeClause = gameType
       ? `"gameType" = $3`
-      : `"gameType" = (SELECT "gameType" FROM "Collection" WHERE id = $1)`;
+      : `"gameType" = (SELECT "gameType" FROM "collections" WHERE id = $1)`;
 
     const params: unknown[] = [collectionId, userId];
     if (gameType) params.push(gameType);
@@ -70,15 +70,15 @@ export async function getSetCompletion(
          COALESCE(total.total, 0)::int as total
        FROM (
          SELECT c."setName", COUNT(DISTINCT cc."cardId")::int as owned
-         FROM "CollectionCard" cc
-         JOIN "Card" c ON c.id = cc."cardId"
-         JOIN "Collection" col ON col.id = cc."collectionId"
+         FROM "collection_cards" cc
+         JOIN "cards" c ON c.id = cc."cardId"
+         JOIN "collections" col ON col.id = cc."collectionId"
          WHERE cc."collectionId" = $1 AND col."userId" = $2 AND c."setName" IS NOT NULL
          GROUP BY c."setName"
        ) owned
        LEFT JOIN (
          SELECT "setName", COUNT(*)::int as total
-         FROM "Card"
+         FROM "cards"
          WHERE ${gameTypeClause}
            AND "setName" IS NOT NULL
          GROUP BY "setName"

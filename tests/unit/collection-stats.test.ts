@@ -136,7 +136,7 @@ describe("getSetCompletion", () => {
     await getSetCompletion("col-1", "user-1");
 
     const sql = mockPrisma.$queryRawUnsafe.mock.calls[0]?.[0] as string;
-    expect(sql).toContain('SELECT "gameType" FROM "Collection"');
+    expect(sql).toContain('SELECT "gameType" FROM "collections"');
   });
 
   it("returns empty array for empty collection", async () => {

@@ -40,10 +40,10 @@ async function portfolioLeaderboard(): Promise<LeaderboardEntry[]> {
   >(`
     SELECT u.id, u.name, u.image,
            COALESCE(SUM(cc.quantity * c."marketPrice"), 0)::float as value
-    FROM "User" u
-    JOIN "Collection" col ON col."userId" = u.id
-    JOIN "CollectionCard" cc ON cc."collectionId" = col.id
-    JOIN "Card" c ON c.id = cc."cardId"
+    FROM "users" u
+    JOIN "collections" col ON col."userId" = u.id
+    JOIN "collection_cards" cc ON cc."collectionId" = col.id
+    JOIN "cards" c ON c.id = cc."cardId"
     WHERE u."isPublic" = true AND c."marketPrice" IS NOT NULL
     GROUP BY u.id
     HAVING SUM(cc.quantity * c."marketPrice") > 0
@@ -66,9 +66,9 @@ async function cardsLeaderboard(): Promise<LeaderboardEntry[]> {
   >(`
     SELECT u.id, u.name, u.image,
            COALESCE(SUM(cc.quantity), 0)::int as value
-    FROM "User" u
-    JOIN "Collection" col ON col."userId" = u.id
-    JOIN "CollectionCard" cc ON cc."collectionId" = col.id
+    FROM "users" u
+    JOIN "collections" col ON col."userId" = u.id
+    JOIN "collection_cards" cc ON cc."collectionId" = col.id
     WHERE u."isPublic" = true
     GROUP BY u.id
     HAVING SUM(cc.quantity) > 0
@@ -137,12 +137,12 @@ async function tradesLeaderboard(): Promise<LeaderboardEntry[]> {
   >(`
     SELECT u.id, u.name, u.image,
            (COALESCE(s.cnt, 0) + COALESCE(b.cnt, 0))::int as value
-    FROM "User" u
+    FROM "users" u
     LEFT JOIN (
-      SELECT "sellerId", COUNT(*)::int as cnt FROM "Transaction" GROUP BY "sellerId"
+      SELECT "sellerId", COUNT(*)::int as cnt FROM "transactions" GROUP BY "sellerId"
     ) s ON s."sellerId" = u.id
     LEFT JOIN (
-      SELECT "buyerId", COUNT(*)::int as cnt FROM "Transaction" GROUP BY "buyerId"
+      SELECT "buyerId", COUNT(*)::int as cnt FROM "transactions" GROUP BY "buyerId"
     ) b ON b."buyerId" = u.id
     WHERE u."isPublic" = true
       AND (COALESCE(s.cnt, 0) + COALESCE(b.cnt, 0)) > 0
