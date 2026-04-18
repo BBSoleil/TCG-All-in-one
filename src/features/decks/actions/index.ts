@@ -8,4 +8,5 @@ export {
   validateDeckAction,
   analyzeDeckAction,
   fetchCardsForDeck,
+  getUserDecksAction,
 } from "./deck-actions";

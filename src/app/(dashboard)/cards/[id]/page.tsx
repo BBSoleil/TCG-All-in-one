@@ -24,6 +24,7 @@ import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
 import { AddToWishlistDialog } from "./add-to-wishlist-dialog";
 import { AddToCollectionDialog } from "./add-to-collection-dialog";
+import { AddToDeckDialog } from "./add-to-deck-dialog";
 import { GameDetails } from "./game-details";
 
 export async function generateMetadata({
@@ -108,9 +109,13 @@ export default async function CardDetailPage({
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <AddToCollectionDialog cardId={card.id} cardName={card.name} />
+            <AddToDeckDialog cardId={card.id} cardName={card.name} gameType={card.gameType} />
             <AddToWishlistDialog cardId={card.id} cardName={card.name} />
+            <Link href={`/market?cardId=${card.id}`}>
+              <Button variant="outline">View marketplace</Button>
+            </Link>
           </div>
 
           <Card>

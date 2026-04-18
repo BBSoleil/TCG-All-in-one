@@ -16,10 +16,30 @@ const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
 });
 
+const SITE_URL =
+  process.env["NEXT_PUBLIC_SITE_URL"] ??
+  process.env["AUTH_URL"] ??
+  "https://tcg-all-in-one.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "TCG All-in-One | Intelligent Collector's Vault",
   description:
     "Turn your TCG collection into an intelligent portfolio. Track, value, build, and connect across Pokemon, Yu-Gi-Oh!, Magic: The Gathering, and One Piece.",
+  openGraph: {
+    type: "website",
+    siteName: "TCG All-in-One",
+    title: "TCG All-in-One | Intelligent Collector's Vault",
+    description:
+      "Track, value, build, and connect across Pokemon, Yu-Gi-Oh!, Magic: The Gathering, and One Piece.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TCG All-in-One | Intelligent Collector's Vault",
+    description:
+      "Track, value, build, and connect across Pokemon, Yu-Gi-Oh!, Magic: The Gathering, and One Piece.",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

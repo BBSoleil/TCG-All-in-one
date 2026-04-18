@@ -19,7 +19,7 @@ export function CtaSection() {
             YOUR COLLECTION IS <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary animate-holo-gradient bg-300%">WAITING</span>
           </h2>
           <p className="text-xl text-muted-foreground font-sans mb-10 max-w-2xl">
-            Join thousands of collectors who have already upgraded their experience. Start tracking your portfolio today.
+            Be among the first collectors to run their entire portfolio from one place. Start tracking today, free.
           </p>
 
           <Link href="/signup">

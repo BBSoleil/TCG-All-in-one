@@ -37,7 +37,7 @@ const DEFAULT_SIZES: Record<CardImageSize, string> = {
   thumb: "24px",
   small: "56px",
   medium: "128px",
-  large: "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
+  large: "(max-width: 640px) 45vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw",
   detail: "300px",
 };
 

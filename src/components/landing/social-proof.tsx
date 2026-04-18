@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Database, Users, Globe, CheckCircle2, type LucideIcon } from "lucide-react";
-import Image from "next/image";
+import { Database, Users, Globe, CheckCircle2, Layers, LineChart, Sparkles, type LucideIcon } from "lucide-react";
 
 interface Stat {
   icon: LucideIcon;
@@ -17,25 +16,28 @@ const STATS: Stat[] = [
   { icon: CheckCircle2, label: "Free to Start", value: "$0" },
 ];
 
-const TESTIMONIALS = [
+interface Highlight {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+}
+
+const HIGHLIGHTS: Highlight[] = [
   {
-    quote: "Finally, one app for my entire Pokemon collection. The price tracking alone is worth it.",
-    user: "@VaultMaster_JP",
-    badge: "Legendary Collector",
-    avatar: "/images/avatar-1.png",
+    icon: Layers,
+    title: "One vault, every TCG",
+    body: "Pokemon, Yu-Gi-Oh!, Magic, and One Piece in a single collection — no app switching, no spreadsheets.",
   },
   {
-    quote: "I switched from 3 different apps. TCG All-in-One replaced all of them.",
-    user: "@BluEyesDragon",
-    badge: "Master Trader",
-    avatar: "/images/avatar-2.png",
+    icon: LineChart,
+    title: "Real-time valuation",
+    body: "Your portfolio value updates as markets move. Track gainers, losers, and total worth across every card you own.",
   },
   {
-    quote: "The deck builder suggestions from my own collection? Game changer.",
-    user: "@MTG_Sarah",
-    badge: "Deck Architect",
-    avatar: "/images/avatar-3.png",
-  }
+    icon: Sparkles,
+    title: "Built for the long run",
+    body: "Deck builder, marketplace, wishlists, alerts. New features ship weekly. You shape the roadmap.",
+  },
 ];
 
 export function SocialProof() {
@@ -61,9 +63,9 @@ export function SocialProof() {
           ))}
         </div>
 
-        {/* Testimonials */}
+        {/* Why builders pick TCG All-in-One */}
         <div className="grid md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((testimonial, i) => (
+          {HIGHLIGHTS.map((h, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -72,23 +74,14 @@ export function SocialProof() {
               transition={{ delay: i * 0.15 }}
               className="relative p-1 rounded-2xl group"
             >
-              {/* Subtle Holo Border */}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/10 to-transparent group-hover:from-primary/30 group-hover:to-secondary/30 transition-colors duration-500" />
 
-              <div className="relative bg-card/80 backdrop-blur-md h-full rounded-[15px] p-8 border border-white/5 border-l-4 border-l-primary/30 group-hover:border-l-primary flex flex-col justify-between transition-colors">
-                <p className="text-muted-foreground font-sans text-lg italic mb-8 relative z-10">
-                  &ldquo;{testimonial.quote}&rdquo;
+              <div className="relative bg-card/80 backdrop-blur-md h-full rounded-[15px] p-8 border border-white/5 border-l-4 border-l-primary/30 group-hover:border-l-primary flex flex-col gap-4 transition-colors">
+                <h.icon className="w-7 h-7 text-primary" strokeWidth={1.5} />
+                <h3 className="font-display text-white tracking-wider text-xl">{h.title}</h3>
+                <p className="text-muted-foreground font-sans text-base leading-relaxed">
+                  {h.body}
                 </p>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/30">
-                    <Image src={testimonial.avatar} alt={testimonial.user} width={48} height={48} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <div className="font-display text-white tracking-wider text-lg">{testimonial.user}</div>
-                    <div className="text-xs font-sans text-primary">{testimonial.badge}</div>
-                  </div>
-                </div>
               </div>
             </motion.div>
           ))}
