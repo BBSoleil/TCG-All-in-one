@@ -25,14 +25,29 @@ export async function GET(request: Request) {
   const mode = url.searchParams.get("mode") ?? "thrown";
   const marker = `sentry-test-${Date.now()}`;
 
+  const dsn = process.env["NEXT_PUBLIC_SENTRY_DSN"];
+  const client = Sentry.getClient();
+  const clientConfigured = !!client && !!client.getOptions().dsn;
+
   if (mode === "captured") {
-    Sentry.captureException(new Error(`Sentry captured-mode smoke test [${marker}]`), {
-      tags: { "test.kind": "sentry-smoke", "test.marker": marker },
-    });
+    const eventId = Sentry.captureException(
+      new Error(`Sentry captured-mode smoke test [${marker}]`),
+      { tags: { "test.kind": "sentry-smoke", "test.marker": marker } },
+    );
+    // Force flush so the event is sent before the serverless function exits
+    await Sentry.flush(2000);
     return NextResponse.json({
       ok: true,
       mode,
       marker,
+      eventId,
+      diagnostics: {
+        hasDsnEnvVar: !!dsn,
+        dsnPrefix: dsn ? dsn.slice(0, 30) + "..." : null,
+        clientInitialized: !!client,
+        clientHasDsn: clientConfigured,
+        nodeEnv: process.env["NODE_ENV"] ?? null,
+      },
       hint: "Search for the marker tag in Sentry Issues within a minute.",
     });
   }
