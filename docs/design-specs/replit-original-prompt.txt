@@ -1,0 +1,106 @@
+# Replit Prompt — TCG All-in-One Website
+
+Build a stunning, modern landing page + multi-page website for **TCG All-in-One** — the ultimate digital platform for Trading Card Game collectors and players.
+
+## What the product is
+
+TCG All-in-One is an all-in-one app that centralizes everything a TCG collector/player needs:
+- **Collection Management**: Track your cards, organize by set/rarity/condition, track set completion %, scan cards with camera
+- **Market Data & Valuation**: Real-time card prices, historical price charts, portfolio value, personal ROI, price alerts
+- **Deck Builder**: Build decks with legality checks, synergy analysis, card suggestions from your collection, public sharing
+- **Social & Community**: Public profiles, browse other collections, follow collectors, compare progress, achievement badges & milestones
+- **Marketplace (coming soon)**: Buy/sell cards, smart matching, secure trading, rated profiles
+
+Supported games: **Pokémon TCG, Yu-Gi-Oh!, Magic: The Gathering, One Piece Card Game**
+
+The tagline: *"Turn your TCG collection into an intelligent portfolio, a social asset, and a competitive ecosystem."*
+
+## Visual Direction & Aesthetic
+
+This is the most important part. The design must feel like **a premium manga/anime-infused trading card universe**. Think:
+
+### Mood & Atmosphere
+- Dark-themed UI as the base (deep blacks, rich dark blues, charcoal) — like opening a premium booster pack at midnight
+- Vibrant neon accent colors that pop: electric blue, holographic purple, gold foil, hot pink — inspired by holographic/rainbow rare cards
+- The feeling of a high-end Japanese card shop meets a futuristic collector's vault
+- Energy and excitement — this is NOT a boring fintech dashboard, it's a collector's paradise
+
+### Visual Effects & Details
+- **Holographic / foil card effects**: Shimmering gradients that shift on hover, iridescent surfaces, rainbow reflections — make elements feel like actual holo cards
+- **Glassmorphism**: Frosted glass panels with backdrop blur over dark backgrounds
+- **Particle effects or floating elements**: Subtle sparkles, energy orbs, or floating card silhouettes in hero sections
+- **Card fanning / spread animations**: Cards that fan out, flip, rotate in 3D on scroll or hover
+- **Glow effects**: Soft neon glows behind buttons, cards, and key UI elements
+- **Manga-style accents**: Speed lines, dynamic angles, bold typography with slight Japanese typographic influence
+- **Grain/noise texture overlay**: Subtle film grain for that premium editorial feel
+
+### Typography
+- Bold, impactful display font for headlines (think: Bebas Neue, Oswald, or something with manga energy)
+- Clean modern sans-serif for body text (DM Sans, Satoshi, or similar)
+- Some accents in a stylized/decorative font for section labels or badges
+
+### Layout & Composition
+- Hero section: Full-screen, cinematic — a dramatic card spread or holographic card floating in space with particles, the logo huge and proud, a glowing CTA button
+- Feature sections: Use card-like containers with rounded corners, holographic borders, and hover effects
+- Asymmetric layouts with overlapping elements, diagonal sections, and depth layers
+- Scroll-triggered animations: elements slide in, cards flip, stats count up
+- Mobile-first responsive design
+
+## Pages to Build
+
+### 1. Landing Page (Hero + Features + CTA)
+- Cinematic hero with animated card visuals
+- "The Four Pillars" section: Collection / Valuation / Gameplay / Community — each with an icon and short description, displayed as 4 glowing cards
+- Supported Games section: Show Pokémon, Yu-Gi-Oh!, MTG, One Piece logos/cards with hover effects
+- Feature showcase: Collection tracking, market data, deck builder, social features — use alternating left/right layouts with mockup screenshots or illustrated cards
+- Milestones & Badges preview: Show example achievement badges with a gamified visual
+- Pricing section: Free tier vs Premium tier — use a card-flip or holographic comparison
+- Final CTA: "Start Your Collection" with a glowing button
+- Footer with links, socials, newsletter signup
+
+### 2. Features Page
+- Deeper dive into each core feature
+- Animated mockups or illustrations for each feature
+- Comparison with competitors (subtle — show what makes TCG All-in-One different)
+
+### 3. Pricing Page
+- Free vs Premium tiers in a visually rich comparison
+- Premium feels exclusive — gold/holographic treatment
+- FAQ accordion at the bottom
+
+### 4. About / Vision Page
+- The story behind TCG All-in-One
+- The vision: becoming the go-to digital hub for serious TCG collectors
+- Team section (placeholder)
+- Roadmap timeline with phases
+
+### 5. Blog / News (placeholder structure)
+- Card-style article previews in a grid
+- Categories: Updates, Market Insights, Deck Guides, Community Spotlights
+
+### 6. Auth Pages (Sign Up / Log In)
+- Beautiful auth forms with a card-themed background
+- Social login buttons (Google, Discord)
+- Animated card in the background or side panel
+
+## Tech Preferences
+- React (Next.js if possible) with TypeScript
+- Tailwind CSS for styling
+- Framer Motion for animations
+- Any cool libraries you see fit for the holographic/particle effects (three.js, tsparticles, etc.)
+- Responsive and performant
+
+## Business Model Context
+- Freemium: Free tier with core features, Premium tier with advanced analytics, custom alerts, exclusive badges, marketplace advantages
+- Target audience: Serious TCG collectors and players aged 16-40, digital-native, community-driven
+- Tone: Premium but accessible, exciting but trustworthy, gamer-friendly but not childish
+
+## What I DON'T want
+- Generic SaaS landing page with boring gradients
+- Corporate/enterprise vibes
+- Flat, lifeless UI with no personality
+- Stock photos — use illustrated/stylized visuals or CSS art instead
+- White/light theme as default (dark mode is the primary theme)
+
+## Summary
+Make it feel like the website itself is a rare holographic card — premium, eye-catching, collectible. Every section should make a TCG collector think "this was built BY collectors, FOR collectors." The website should be as exciting as pulling a chase card from a booster pack.
