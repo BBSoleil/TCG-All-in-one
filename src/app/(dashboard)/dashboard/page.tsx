@@ -44,14 +44,20 @@ export default async function DashboardPage() {
   // Record a snapshot (fire-and-forget, don't block render)
   void recordPortfolioSnapshot(session.user.id);
 
+  const isNewUser = stats.totalCards === 0 && stats.totalCollections === 0;
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold tracking-tight md:text-2xl">Dashboard</h1>
         <p className="text-sm text-muted-foreground md:text-base">
-          Welcome back, {session.user.name ?? "collector"}. Here&apos;s your overview.
+          {isNewUser
+            ? `Welcome to TCG All-in-One, ${session.user.name ?? "collector"}. Let's get your first collection set up.`
+            : `Welcome back, ${session.user.name ?? "collector"}. Here's your overview.`}
         </p>
       </div>
+
+      {isNewUser && <GetStartedGuide />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="dash-card">
@@ -200,5 +206,57 @@ export default async function DashboardPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function GetStartedGuide() {
+  const steps: { n: number; title: string; body: string; href: string; cta: string }[] = [
+    {
+      n: 1,
+      title: "Create a collection",
+      body: "Pick a game (Pokemon, Yu-Gi-Oh!, Magic, or One Piece) and give your collection a name.",
+      href: "/collection",
+      cta: "New collection",
+    },
+    {
+      n: 2,
+      title: "Browse the database",
+      body: "Search 90,000+ cards across 500+ sets. Add any card to your collection, deck, or wishlist in one click.",
+      href: "/cards",
+      cta: "Browse cards",
+    },
+    {
+      n: 3,
+      title: "Track your value",
+      body: "Every card you add contributes to your portfolio. Track gainers, losers, and total value over time.",
+      href: "/analytics",
+      cta: "See analytics",
+    },
+  ];
+
+  return (
+    <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
+      <CardHeader>
+        <CardTitle className="text-lg">Get started in 3 steps</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 md:grid-cols-3">
+          {steps.map((step) => (
+            <div key={step.n} className="flex flex-col rounded-lg border border-border bg-card/60 p-4">
+              <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
+                {step.n}
+              </div>
+              <h3 className="mb-1 font-semibold">{step.title}</h3>
+              <p className="mb-4 flex-1 text-sm text-muted-foreground">{step.body}</p>
+              <Link href={step.href}>
+                <Button variant="secondary" size="sm" className="w-full">
+                  {step.cta}
+                </Button>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
