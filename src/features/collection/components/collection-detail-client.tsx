@@ -114,6 +114,34 @@ export function CollectionDetailClient({
     fetchData(page, true);
   }, [id, page, fetchData]);
 
+  // Client-side filters (declared before any early return to respect rules-of-hooks)
+  const [filterLang, setFilterLang] = useState<string>("");
+  const [filterCondition, setFilterCondition] = useState<string>("");
+  const [filterFoil, setFilterFoil] = useState<string>("");
+  const [filterForSale, setFilterForSale] = useState(false);
+  const [filterForTrade, setFilterForTrade] = useState(false);
+
+  const hasActiveFilters = filterLang || filterCondition || filterFoil || filterForSale || filterForTrade;
+
+  const cardsForFilter = data?.cards ?? [];
+
+  const filteredCards = useMemo(() => {
+    if (!hasActiveFilters) return cardsForFilter;
+    return cardsForFilter.filter((c) => {
+      if (filterLang && c.language !== filterLang) return false;
+      if (filterCondition && c.condition !== filterCondition) return false;
+      if (filterFoil === "yes" && !c.foil) return false;
+      if (filterFoil === "no" && c.foil) return false;
+      if (filterForSale && !c.forSale) return false;
+      if (filterForTrade && !c.forTrade) return false;
+      return true;
+    });
+  }, [cardsForFilter, filterLang, filterCondition, filterFoil, filterForSale, filterForTrade, hasActiveFilters]);
+
+  // Derive unique values from current page cards for dropdown options
+  const languages = useMemo(() => [...new Set(cardsForFilter.map((c) => c.language))].sort(), [cardsForFilter]);
+  const conditions = useMemo(() => [...new Set(cardsForFilter.map((c) => c.condition))].sort(), [cardsForFilter]);
+
   if (loading && !data) {
     return <CollectionDetailSkeleton />;
   }
@@ -127,32 +155,6 @@ export function CollectionDetailClient({
   }
 
   const { collection, cards, total, totalPages, collectionValue, completion } = data;
-
-  // Client-side filters
-  const [filterLang, setFilterLang] = useState<string>("");
-  const [filterCondition, setFilterCondition] = useState<string>("");
-  const [filterFoil, setFilterFoil] = useState<string>("");
-  const [filterForSale, setFilterForSale] = useState(false);
-  const [filterForTrade, setFilterForTrade] = useState(false);
-
-  const hasActiveFilters = filterLang || filterCondition || filterFoil || filterForSale || filterForTrade;
-
-  const filteredCards = useMemo(() => {
-    if (!hasActiveFilters) return cards;
-    return cards.filter((c) => {
-      if (filterLang && c.language !== filterLang) return false;
-      if (filterCondition && c.condition !== filterCondition) return false;
-      if (filterFoil === "yes" && !c.foil) return false;
-      if (filterFoil === "no" && c.foil) return false;
-      if (filterForSale && !c.forSale) return false;
-      if (filterForTrade && !c.forTrade) return false;
-      return true;
-    });
-  }, [cards, filterLang, filterCondition, filterFoil, filterForSale, filterForTrade, hasActiveFilters]);
-
-  // Derive unique values from current page cards for dropdown options
-  const languages = useMemo(() => [...new Set(cards.map((c) => c.language))].sort(), [cards]);
-  const conditions = useMemo(() => [...new Set(cards.map((c) => c.condition))].sort(), [cards]);
 
   function clearFilters() {
     setFilterLang("");

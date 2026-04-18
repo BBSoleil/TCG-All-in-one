@@ -45,7 +45,7 @@ export default function OGImage() {
             letterSpacing: -1,
           }}
         >
-          Your intelligent collector's vault
+          {"Your intelligent collector's vault"}
         </div>
         <div
           style={{

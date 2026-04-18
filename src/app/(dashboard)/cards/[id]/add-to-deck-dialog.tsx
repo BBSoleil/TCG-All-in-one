@@ -44,14 +44,24 @@ export function AddToDeckDialog({
 
   useEffect(() => {
     if (!open) return;
-    setIsLoading(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setIsLoading(true);
+    });
     getUserDecksAction()
       .then((all) => {
+        if (cancelled) return;
         const filtered = all.filter((d) => d.gameType === gameType);
         setDecks(filtered);
         if (filtered[0]) setDeckId(filtered[0].id);
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [open, gameType]);
 
   function handleAdd() {
@@ -87,7 +97,7 @@ export function AddToDeckDialog({
         ) : decks.length === 0 ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              You don't have any {gameType} decks yet.
+              You don&apos;t have any {gameType} decks yet.
             </p>
             <Button onClick={() => router.push("/decks")}>Create a deck</Button>
           </div>

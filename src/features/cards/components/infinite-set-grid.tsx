@@ -34,12 +34,15 @@ export function InfiniteSetGrid({
 
 function FlatInfiniteGrid({ sets }: { sets: SetInfo[] }) {
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const [prevSets, setPrevSets] = useState(sets);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Reset when sets change
-  useEffect(() => {
+  // Reset visibleCount when sets reference changes (React docs pattern for
+  // "adjusting state on prop change" — preferred over setState-in-effect)
+  if (sets !== prevSets) {
+    setPrevSets(sets);
     setVisibleCount(BATCH_SIZE);
-  }, [sets]);
+  }
 
   const loadMore = useCallback(() => {
     setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, sets.length));
