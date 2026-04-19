@@ -11,6 +11,7 @@ const CARD_SELECT = {
   rarity: true,
   imageUrl: true,
   marketPrice: true,
+  onepieceDetails: { select: { cardType: true } },
 } as const;
 
 export async function getUserDecks(

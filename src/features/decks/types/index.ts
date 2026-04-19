@@ -29,6 +29,7 @@ export interface DeckCardWithDetails {
     rarity: string | null;
     imageUrl: string | null;
     marketPrice: unknown;
+    onepieceDetails?: { cardType: string | null } | null;
   };
 }
 

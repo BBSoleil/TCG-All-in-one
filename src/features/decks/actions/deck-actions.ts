@@ -141,8 +141,10 @@ export async function validateDeckAction(
       cardName: dc.card.name,
       quantity: dc.quantity,
       isSideboard: dc.isSideboard,
+      cardType: dc.card.onepieceDetails?.cardType ?? null,
     })),
     format,
+    deck.gameType,
   );
 
   return { validation };

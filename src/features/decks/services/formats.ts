@@ -1,4 +1,6 @@
 import type { GameFormat, DeckValidationResult } from "../types";
+import { GAME_CONFIG } from "@/shared/constants/game-config";
+import type { GameType } from "@/shared/types";
 
 export const GAME_FORMATS: GameFormat[] = [
   // Pokemon TCG
@@ -26,9 +28,19 @@ export function getFormatById(formatId: string): GameFormat | undefined {
   return GAME_FORMATS.find((f) => f.id === formatId);
 }
 
+export interface DeckValidationCard {
+  cardId: string;
+  cardName: string;
+  quantity: number;
+  isSideboard: boolean;
+  /** "Leader" | "Character" | "Event" | "Stage" for One Piece, optional for others */
+  cardType?: string | null;
+}
+
 export function validateDeck(
-  cards: { cardId: string; cardName: string; quantity: number; isSideboard: boolean }[],
+  cards: DeckValidationCard[],
   format: GameFormat | null,
+  gameType?: GameType,
 ): DeckValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -39,8 +51,50 @@ export function validateDeck(
   const mainTotal = mainCards.reduce((sum, c) => sum + c.quantity, 0);
   const sideTotal = sideboardCards.reduce((sum, c) => sum + c.quantity, 0);
 
+  // Game-type-level rules apply even without a format selected. Pulled from
+  // GAME_CONFIG so the source of truth lives in one place.
+  if (gameType) {
+    const cfg = GAME_CONFIG[gameType];
+    if (!format) {
+      if (mainTotal > 0 && mainTotal < cfg.deckRules.minCards) {
+        warnings.push(
+          `Deck has ${mainTotal} cards but ${gameType} typically needs at least ${cfg.deckRules.minCards}`,
+        );
+      }
+      if (cfg.deckRules.maxCards && mainTotal > cfg.deckRules.maxCards) {
+        errors.push(
+          `Deck exceeds ${gameType} max of ${cfg.deckRules.maxCards} cards (currently ${mainTotal})`,
+        );
+      }
+      // Basic copy limit — format-less validation still enforces the global max
+      const globalCounts = new Map<string, { name: string; total: number }>();
+      for (const c of cards) {
+        const e = globalCounts.get(c.cardId);
+        if (e) e.total += c.quantity;
+        else globalCounts.set(c.cardId, { name: c.cardName, total: c.quantity });
+      }
+      for (const [, { name, total }] of globalCounts) {
+        if (total > cfg.deckRules.maxCopies) {
+          errors.push(`"${name}" exceeds ${gameType} copy limit of ${cfg.deckRules.maxCopies}`);
+        }
+      }
+    }
+
+    // One Piece: exactly one Leader card, outside the main deck count.
+    if (gameType === "ONEPIECE") {
+      const leaders = cards.filter(
+        (c) => c.cardType?.toLowerCase() === "leader",
+      );
+      const leaderCount = leaders.reduce((sum, c) => sum + c.quantity, 0);
+      if (leaderCount === 0 && mainTotal > 0) {
+        errors.push("One Piece deck requires exactly 1 Leader card");
+      } else if (leaderCount > 1) {
+        errors.push(`One Piece deck can only have 1 Leader (found ${leaderCount})`);
+      }
+    }
+  }
+
   if (!format) {
-    // No format selected — just basic validation
     if (mainTotal === 0) {
       errors.push("Deck must contain at least one card");
     }
