@@ -10,9 +10,11 @@ import type { SavedSearchItem } from "../services/saved-searches";
 
 interface SavedSearchesProps {
   searches: SavedSearchItem[];
+  onDeleted?: (id: string) => void;
+  onSaved?: () => void;
 }
 
-export function SavedSearches({ searches }: SavedSearchesProps) {
+export function SavedSearches({ searches, onDeleted, onSaved }: SavedSearchesProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showSave, setShowSave] = useState(false);
@@ -41,12 +43,16 @@ export function SavedSearches({ searches }: SavedSearchesProps) {
       await saveSearchAction(name.trim(), JSON.stringify(currentFilters));
       setName("");
       setShowSave(false);
+      onSaved?.();
     });
   }
 
   function handleDelete(id: string) {
     startTransition(async () => {
-      await deleteSavedSearchAction(id);
+      const result = await deleteSavedSearchAction(id);
+      if (!result?.error) {
+        onDeleted?.(id);
+      }
     });
   }
 
