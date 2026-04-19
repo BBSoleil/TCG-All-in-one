@@ -56,7 +56,6 @@ export const CardGridTile = memo(function CardGridTile({ card }: { card: CardLis
               variant="secondary"
               size="sm"
               className="h-8 w-8 rounded-full p-0 text-xs"
-              onClick={(e) => e.preventDefault()}
               title="Add to collection"
               aria-label="Add to collection"
             >
@@ -69,7 +68,6 @@ export const CardGridTile = memo(function CardGridTile({ card }: { card: CardLis
               variant="secondary"
               size="sm"
               className="h-8 w-8 rounded-full p-0 text-xs"
-              onClick={(e) => e.preventDefault()}
               title="List for sale"
               aria-label="List for sale"
             >

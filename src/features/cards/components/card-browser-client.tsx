@@ -7,7 +7,7 @@ import { CardSearchFilters } from "./card-search-filters";
 import { CardPagination } from "./card-pagination";
 import { CardBreadcrumb } from "./card-breadcrumb";
 import { CardGridSkeleton } from "./card-grid-skeleton";
-import { SetGrid } from "./set-grid";
+import { InfiniteSetGrid } from "./infinite-set-grid";
 import { GameTabsClient } from "./game-tabs-client";
 import type { CardSearchResult } from "@/features/cards/services";
 import type { SetInfo } from "@/features/cards/types";
@@ -45,6 +45,25 @@ function createCache<T>() {
 
 const searchCache = createCache<CardSearchResult>();
 const setsCache = createCache<SetInfo[]>();
+
+/**
+ * Sort sets by (gameType, setCode ascending with null-last, setName as tie-break).
+ * With 2-digit numeric suffixes (OP-01, OP-02, ..., OP-13, EB-01, PRB-01, ST-01),
+ * alphanumeric sort is release-order for One Piece. Other games follow their own
+ * conventions but at least the order is deterministic, not random-alphabetical.
+ */
+function sortSetsByCode(sets: SetInfo[]): SetInfo[] {
+  return [...sets].sort((a, b) => {
+    if (a.gameType !== b.gameType) return a.gameType.localeCompare(b.gameType);
+    const aCode = a.setCode ?? "";
+    const bCode = b.setCode ?? "";
+    if (aCode && !bCode) return -1;
+    if (!aCode && bCode) return 1;
+    const byCode = aCode.localeCompare(bCode, undefined, { numeric: true, sensitivity: "base" });
+    if (byCode !== 0) return byCode;
+    return a.setName.localeCompare(b.setName);
+  });
+}
 
 export function CardBrowserClient() {
   const searchParams = useSearchParams();
@@ -126,14 +145,15 @@ export function CardBrowserClient() {
     if (game) {
       const result = await fetchGameSets(signal, game);
       if (signal.aborted) return;
-      setSets(result);
-      setSetNames(result.map((s) => s.setName));
+      const sorted = sortSetsByCode(result);
+      setSets(sorted);
+      setSetNames(sorted.map((s) => s.setName));
     } else {
       // All games — fetch all 4 static files in parallel
       const games = ["POKEMON", "YUGIOH", "MTG", "ONEPIECE"];
       const results = await Promise.all(games.map((g) => fetchGameSets(signal, g)));
       if (signal.aborted) return;
-      const allSets = results.flat();
+      const allSets = sortSetsByCode(results.flat());
       setsCache.set("sets-all", allSets);
       setSets(allSets);
       setSetNames(allSets.map((s) => s.setName));
@@ -242,7 +262,7 @@ export function CardBrowserClient() {
           <p className="text-sm text-muted-foreground">
             Browse {sets.reduce((sum, s) => sum + s.cardCount, 0).toLocaleString()} cards across {sets.length} sets.
           </p>
-          <SetGrid sets={sets} groupByGame={!gameType} />
+          <InfiniteSetGrid sets={sets} groupByGame={!gameType} />
         </>
       )}
     </>

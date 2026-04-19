@@ -62,7 +62,9 @@ export interface CardDetail {
 async function getSetsForGameUncached(
   gameType?: GameType,
 ): Promise<SetInfo[]> {
-  // Group by setName + gameType only (not setCode, which includes card numbers for YGO)
+  // Group by setName + gameType only (not setCode, which includes card numbers for YGO).
+  // Sort by MIN(setCode) per-game so One Piece goes OP-01 → OP-11 → EB-01 → PRB-01 → ST-01
+  // (alphanumeric). Null/missing codes fall to the end so sets still show up.
   const gameFilter = gameType ? `AND "gameType" = '${gameType}'` : "";
   const rows = await prisma.$queryRawUnsafe<
     { setName: string; setCode: string | null; gameType: string; cardCount: number }[]
@@ -70,7 +72,7 @@ async function getSetsForGameUncached(
     `SELECT "setName", MIN("setCode") as "setCode", "gameType", COUNT(id)::int as "cardCount"
      FROM cards WHERE "setName" IS NOT NULL ${gameFilter}
      GROUP BY "setName", "gameType"
-     ORDER BY "setName" ASC`,
+     ORDER BY "gameType" ASC, MIN("setCode") ASC NULLS LAST, "setName" ASC`,
   );
 
   return rows.map((r) => ({
