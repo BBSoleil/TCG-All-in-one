@@ -4,7 +4,14 @@ import type { Result } from "@/shared/types";
 
 interface OnePieceApiCard {
   card_name: string;
+  /** Base card code shared across variants, e.g. "OP07-051". */
   card_set_id: string;
+  /**
+   * Unique code per printing/variant, e.g. "OP07-051" (regular),
+   * "OP07-051_p1" (parallel), "OP07-051_p2" (parallel manga).
+   * Older API responses may omit this — we fall back to card_set_id.
+   */
+  card_image_id?: string;
   set_id: string;
   set_name: string;
   rarity: string;
@@ -44,11 +51,17 @@ async function upsertOnePieceCards(
     const cost = card.card_cost ? parseInt(card.card_cost, 10) || null : null;
     const power = card.card_power ? parseInt(card.card_power, 10) || null : null;
 
+    // Variant-aware ID: "OP07-051" (regular), "OP07-051_p1" (parallel),
+    // "OP07-051_p2" (parallel manga). Falls back to card_set_id when the API
+    // response lacks card_image_id so older data still imports.
+    const variantId = card.card_image_id ?? card.card_set_id;
+    const cardId = `onepiece-${variantId}`;
+
     await prisma.card.upsert({
-      where: { id: `onepiece-${card.card_set_id}` },
+      where: { id: cardId },
       create: {
-        id: `onepiece-${card.card_set_id}`,
-        externalId: card.card_set_id,
+        id: cardId,
+        externalId: variantId,
         name: card.card_name,
         gameType: "ONEPIECE",
         setName: card.set_name,
