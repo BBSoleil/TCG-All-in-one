@@ -22,6 +22,7 @@ import {
 import { GAME_LABELS } from "@/shared/types";
 import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
+import { getPriceSource, formatLastUpdated } from "@/shared/lib/price-source";
 import { AddToWishlistDialog } from "./add-to-wishlist-dialog";
 import { AddToCollectionDialog } from "./add-to-collection-dialog";
 import { AddToDeckDialog } from "./add-to-deck-dialog";
@@ -99,7 +100,10 @@ export default async function CardDetailPage({
               <p className="text-3xl font-bold text-primary">
                 {formatPrice(Number(card.marketPrice))}
               </p>
-              {/* Price analytics */}
+              <PriceSourceAttribution
+                gameType={card.gameType}
+                updatedAt={card.updatedAt}
+              />
               {priceHistory.length > 1 && (
                 <PriceAnalytics
                   currentPrice={Number(card.marketPrice)}
@@ -265,5 +269,37 @@ function PriceAnalytics({
         </span>
       </div>
     </div>
+  );
+}
+
+function PriceSourceAttribution({
+  gameType,
+  updatedAt,
+}: {
+  gameType: string;
+  updatedAt: Date | string;
+}) {
+  const source = getPriceSource(gameType);
+  const lastUpdated = formatLastUpdated(updatedAt);
+  if (!source && !lastUpdated) return null;
+
+  return (
+    <p className="text-xs text-muted-foreground">
+      {source && (
+        <>
+          Source:{" "}
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-foreground"
+          >
+            {source.label}
+          </a>
+        </>
+      )}
+      {source && lastUpdated && <span className="mx-1">·</span>}
+      {lastUpdated && <>Last synced {lastUpdated}</>}
+    </p>
   );
 }

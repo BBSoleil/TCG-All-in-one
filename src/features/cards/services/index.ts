@@ -21,6 +21,7 @@ export interface CardDetail {
   imageUrl: string | null;
   marketPrice: unknown;
   createdAt: Date;
+  updatedAt: Date;
   pokemonDetails: {
     hp: number | null;
     types: string[];
