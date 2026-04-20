@@ -116,7 +116,7 @@ function GroupedInfiniteGrid({ sets }: { sets: SetInfo[] }) {
 function SetCard({ set }: { set: SetInfo }) {
   return (
     <Link
-      href={`/cards?gameType=${set.gameType}&setName=${encodeURIComponent(set.setName)}`}
+      href={`/sets/${set.gameType}/${encodeURIComponent(set.setName)}`}
       className={`group rounded-lg border ${GAME_BORDER_COLORS[set.gameType] ?? "border-border"} bg-card p-4 transition-colors hover:border-primary/50`}
     >
       <p className="truncate text-sm font-medium group-hover:text-primary" title={set.setName}>
