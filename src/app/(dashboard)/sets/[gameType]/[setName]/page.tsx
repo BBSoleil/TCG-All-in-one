@@ -16,6 +16,7 @@ import { GAME_LABELS } from "@/shared/types";
 import type { GameType } from "@/shared/types";
 import { GAME_BADGE_CLASSES } from "@/shared/constants";
 import { formatPrice } from "@/shared/lib/format";
+import { LanguageFilter } from "./language-filter";
 
 const VALID_GAMES = new Set<string>(["POKEMON", "YUGIOH", "MTG", "ONEPIECE"]);
 
@@ -34,18 +35,27 @@ export async function generateMetadata({
 
 export default async function SetProgressPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ gameType: string; setName: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const { gameType: rawGame, setName: rawSet } = await params;
+  const { lang } = await searchParams;
   const gameType = rawGame.toUpperCase();
   if (!VALID_GAMES.has(gameType)) notFound();
   const setName = decodeURIComponent(rawSet);
+  const language = lang && lang !== "ALL" ? lang.toUpperCase() : null;
 
-  const result = await getSetProgress(session.user.id, gameType as GameType, setName);
+  const result = await getSetProgress(
+    session.user.id,
+    gameType as GameType,
+    setName,
+    language,
+  );
   if (!result.success || result.data.totalCards === 0) notFound();
 
   const progress = result.data;
@@ -81,9 +91,24 @@ export default async function SetProgressPage({
         </div>
       </div>
 
+      {progress.availableLanguages.length > 0 && (
+        <LanguageFilter
+          available={progress.availableLanguages}
+          active={progress.language}
+          basePath={`/sets/${progress.gameType}/${encodeURIComponent(progress.setName)}`}
+        />
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>Your progress</CardTitle>
+          <CardTitle>
+            Your progress
+            {progress.language && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                · {progress.language} only
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-baseline gap-6">

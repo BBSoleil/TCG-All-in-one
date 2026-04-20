@@ -18,6 +18,10 @@ export interface SetProgress {
   gameType: GameType;
   setName: string;
   setCode: string | null;
+  /** Language filter applied, or null for "all languages" */
+  language: string | null;
+  /** All distinct languages the user owns in this set */
+  availableLanguages: string[];
   totalCards: number;
   uniqueOwned: number;
   totalOwnedCopies: number;
@@ -31,14 +35,38 @@ export interface SetProgress {
  * Computed "standard collection" per set. No DB row created — we derive
  * ownership by joining Card (set) with CollectionCard (user's collections).
  * Lazy-saved on first add through the normal collection flow.
+ *
+ * When `language` is provided, ownership only counts copies in that language
+ * (so a user tracking FR vs EN sees distinct completion percentages). When
+ * null/undefined, all languages are summed.
  */
 export async function getSetProgress(
   userId: string,
   gameType: GameType,
   setName: string,
+  language?: string | null,
 ): Promise<Result<SetProgress>> {
   try {
-    const [cards, ownedRows] = await Promise.all([
+    const ownershipQuery = language
+      ? `SELECT cc."cardId" as "cardId", SUM(cc.quantity)::int as owned
+         FROM "collection_cards" cc
+         JOIN "collections" col ON col.id = cc."collectionId"
+         JOIN "cards" c ON c.id = cc."cardId"
+         WHERE col."userId" = $1 AND c."gameType" = $2 AND c."setName" = $3
+           AND cc.language = $4
+         GROUP BY cc."cardId"`
+      : `SELECT cc."cardId" as "cardId", SUM(cc.quantity)::int as owned
+         FROM "collection_cards" cc
+         JOIN "collections" col ON col.id = cc."collectionId"
+         JOIN "cards" c ON c.id = cc."cardId"
+         WHERE col."userId" = $1 AND c."gameType" = $2 AND c."setName" = $3
+         GROUP BY cc."cardId"`;
+
+    const ownershipParams: unknown[] = language
+      ? [userId, gameType, setName, language]
+      : [userId, gameType, setName];
+
+    const [cards, ownedRows, langRows] = await Promise.all([
       prisma.card.findMany({
         where: { gameType: gameType as PrismaGameType, setName },
         select: {
@@ -52,12 +80,16 @@ export async function getSetProgress(
         orderBy: [{ setCode: "asc" }, { name: "asc" }],
       }),
       prisma.$queryRawUnsafe<{ cardId: string; owned: number }[]>(
-        `SELECT cc."cardId" as "cardId", SUM(cc.quantity)::int as owned
+        ownershipQuery,
+        ...ownershipParams,
+      ),
+      prisma.$queryRawUnsafe<{ language: string }[]>(
+        `SELECT DISTINCT cc.language
          FROM "collection_cards" cc
          JOIN "collections" col ON col.id = cc."collectionId"
          JOIN "cards" c ON c.id = cc."cardId"
          WHERE col."userId" = $1 AND c."gameType" = $2 AND c."setName" = $3
-         GROUP BY cc."cardId"`,
+         ORDER BY cc.language ASC`,
         userId,
         gameType,
         setName,
@@ -98,6 +130,8 @@ export async function getSetProgress(
         gameType,
         setName,
         setCode,
+        language: language ?? null,
+        availableLanguages: langRows.map((r) => r.language).filter(Boolean),
         totalCards,
         uniqueOwned,
         totalOwnedCopies,
