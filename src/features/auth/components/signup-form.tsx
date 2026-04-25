@@ -32,6 +32,7 @@ export function SignupForm() {
             id="name"
             name="name"
             placeholder="Your name"
+            defaultValue={state.name ?? ""}
             required
           />
           {state.fieldErrors?.name && (
@@ -46,6 +47,7 @@ export function SignupForm() {
             name="email"
             type="email"
             placeholder="you@example.com"
+            defaultValue={state.email ?? ""}
             required
           />
           {state.fieldErrors?.email && (

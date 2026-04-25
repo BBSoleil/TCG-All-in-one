@@ -52,7 +52,7 @@ export function SocialProof() {
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}
               transition={{ delay: i * 0.1 }}
               className="flex flex-col items-center text-center p-6 glass-panel rounded-2xl border-white/10"
             >
@@ -70,7 +70,7 @@ export function SocialProof() {
               key={i}
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}
               transition={{ delay: i * 0.15 }}
               className="relative p-1 rounded-2xl group"
             >

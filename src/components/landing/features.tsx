@@ -80,7 +80,7 @@ export function Features() {
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -8 }}
               className={`group relative rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl overflow-hidden transition-all duration-500 cursor-pointer ${pillar.border}`}

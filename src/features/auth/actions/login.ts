@@ -13,6 +13,7 @@ export async function login(
     email: formData.get("email"),
     password: formData.get("password"),
   };
+  const submittedEmail = typeof raw.email === "string" ? raw.email : "";
 
   const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) {
@@ -22,7 +23,7 @@ export async function login(
       fieldErrors[key] = fieldErrors[key] ?? [];
       fieldErrors[key].push(issue.message);
     }
-    return { fieldErrors };
+    return { fieldErrors, email: submittedEmail };
   }
 
   try {
@@ -34,9 +35,9 @@ export async function login(
   } catch (error) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
-        return { error: "Invalid email or password" };
+        return { error: "Invalid email or password", email: submittedEmail };
       }
-      return { error: "Something went wrong. Please try again." };
+      return { error: "Something went wrong. Please try again.", email: submittedEmail };
     }
     // NextAuth redirects throw NEXT_REDIRECT which must be re-thrown
     throw error;

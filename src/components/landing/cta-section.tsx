@@ -12,7 +12,7 @@ export function CtaSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}
           className="flex flex-col items-center"
         >
           <h2 className="text-5xl md:text-7xl font-display text-white mb-6">

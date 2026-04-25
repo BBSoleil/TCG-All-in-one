@@ -17,6 +17,8 @@ export async function signup(
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
   };
+  const submittedName = typeof raw.name === "string" ? raw.name : "";
+  const submittedEmail = typeof raw.email === "string" ? raw.email : "";
 
   const parsed = signupSchema.safeParse(raw);
   if (!parsed.success) {
@@ -26,7 +28,7 @@ export async function signup(
       fieldErrors[key] = fieldErrors[key] ?? [];
       fieldErrors[key].push(issue.message);
     }
-    return { fieldErrors };
+    return { fieldErrors, name: submittedName, email: submittedEmail };
   }
 
   const { name, email, password } = parsed.data;
@@ -34,7 +36,7 @@ export async function signup(
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return { error: "An account with this email already exists" };
+      return { error: "An account with this email already exists", name: submittedName, email: submittedEmail };
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -43,7 +45,7 @@ export async function signup(
       data: { name, email, passwordHash },
     });
   } catch {
-    return { error: "Something went wrong. Please try again." };
+    return { error: "Something went wrong. Please try again.", name: submittedName, email: submittedEmail };
   }
 
   try {

@@ -43,7 +43,7 @@ export function Achievements() {
               key={badge.id}
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ rotateY: 15, rotateX: 10, scale: 1.05, y: -5 }}
               className="flex flex-col items-center group cursor-pointer w-full max-w-[140px]"

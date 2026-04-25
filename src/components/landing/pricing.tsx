@@ -23,7 +23,7 @@ export function Pricing() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}
             className="rounded-3xl glass-panel p-10 border-white/10 relative overflow-hidden"
           >
             <div className="mb-8">
@@ -49,7 +49,7 @@ export function Pricing() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1, margin: "0px 0px -100px 0px" }}
             className="rounded-3xl p-1 holo-border relative"
           >
             <div className="absolute top-0 right-10 -translate-y-1/2 bg-accent text-accent-foreground px-4 py-1 rounded-full font-bold text-sm tracking-wider z-20 shadow-[0_0_20px_rgba(250,204,21,0.5)]">

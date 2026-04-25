@@ -25,6 +25,7 @@ export function LoginForm() {
             name="email"
             type="email"
             placeholder="you@example.com"
+            defaultValue={state.email ?? ""}
             required
           />
           {state.fieldErrors?.email && (
