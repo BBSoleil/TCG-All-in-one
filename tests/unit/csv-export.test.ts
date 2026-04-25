@@ -28,14 +28,14 @@ function makeCard(overrides: Partial<CollectionCardWithDetails> = {}): Collectio
 
 describe("generateCSV", () => {
   it("generates headers for empty array", () => {
-    const csv = generateCSV([], "My Collection");
+    const csv = generateCSV([]);
     const lines = csv.split("\n");
     expect(lines).toHaveLength(1);
     expect(lines[0]).toBe("Name,Game,Set,Rarity,Quantity,Condition,Market Price,Total Value,Notes");
   });
 
   it("generates correct row for a card", () => {
-    const csv = generateCSV([makeCard()], "Test");
+    const csv = generateCSV([makeCard()]);
     const lines = csv.split("\n");
     expect(lines).toHaveLength(2);
     expect(lines[1]).toBe("Pikachu,POKEMON,Base Set,COMMON,1,Near Mint,5.50,5.50,");
@@ -43,14 +43,14 @@ describe("generateCSV", () => {
 
   it("calculates total value as price * quantity", () => {
     const card = makeCard({ quantity: 3, card: { ...makeCard().card, marketPrice: 10 } });
-    const csv = generateCSV([card], "Test");
+    const csv = generateCSV([card]);
     const lines = csv.split("\n");
     expect(lines[1]).toContain("30.00");
   });
 
   it("handles null market price", () => {
     const card = makeCard({ card: { ...makeCard().card, marketPrice: null } });
-    const csv = generateCSV([card], "Test");
+    const csv = generateCSV([card]);
     const lines = csv.split("\n");
     // Price and total value should be empty
     expect(lines[1]).toBe("Pikachu,POKEMON,Base Set,COMMON,1,Near Mint,,,");
@@ -60,7 +60,7 @@ describe("generateCSV", () => {
     const card = makeCard({
       card: { ...makeCard().card, name: "Dark Magician, the Ultimate" },
     });
-    const csv = generateCSV([card], "Test");
+    const csv = generateCSV([card]);
     expect(csv).toContain('"Dark Magician, the Ultimate"');
   });
 
@@ -68,7 +68,7 @@ describe("generateCSV", () => {
     const card = makeCard({
       notes: 'Card says "hello"',
     });
-    const csv = generateCSV([card], "Test");
+    const csv = generateCSV([card]);
     expect(csv).toContain('"Card says ""hello"""');
   });
 
@@ -82,7 +82,7 @@ describe("generateCSV", () => {
         rarity: null,
       },
     });
-    const csv = generateCSV([card], "Test");
+    const csv = generateCSV([card]);
     const lines = csv.split("\n");
     expect(lines[1]).toBe("Pikachu,POKEMON,,,1,,5.50,5.50,");
   });
@@ -96,7 +96,7 @@ describe("generateCSV", () => {
         card: { ...makeCard().card, id: "card-2", name: "Charizard", marketPrice: 100 },
       }),
     ];
-    const csv = generateCSV(cards, "Test");
+    const csv = generateCSV(cards);
     const lines = csv.split("\n");
     expect(lines).toHaveLength(3);
   });

@@ -1,6 +1,6 @@
 import { prisma } from "@/shared/lib/prisma";
 import type { Result } from "@/shared/types";
-import type { UserRatingInfo, WishlistMatch, ListingItem } from "../types";
+import type { UserRatingInfo, WishlistMatch } from "../types";
 
 export async function rateTransaction(
   transactionId: string,

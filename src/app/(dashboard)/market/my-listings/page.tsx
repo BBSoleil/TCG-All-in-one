@@ -8,7 +8,7 @@ import { cancelListingAction } from "@/features/market/actions/listing-actions";
 import { EditPriceDialog } from "@/features/market/components";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,

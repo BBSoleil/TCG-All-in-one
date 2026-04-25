@@ -70,7 +70,6 @@ export default async function OGImage({
           }}
         >
           {user.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={user.image}
               alt={name}

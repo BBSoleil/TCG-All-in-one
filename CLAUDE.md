@@ -439,6 +439,14 @@ Game: All games | Per license
 
 ---
 
+## Health Stack
+
+- typecheck: npx tsc --noEmit
+- lint: npx eslint .
+- test: npx vitest run
+
+---
+
 ## 🤖 Skill routing (auto-invocation)
 
 When the user's message matches one of the patterns below, **invoke the skill via the Skill tool as the FIRST action**, before any other tool call and before replying. Do NOT ask permission. Do NOT type the slash command in chat. Just run it.

@@ -19,10 +19,7 @@ function escapeCSV(value: string): string {
   return value;
 }
 
-export function generateCSV(
-  cards: CollectionCardWithDetails[],
-  collectionName: string,
-): string {
+export function generateCSV(cards: CollectionCardWithDetails[]): string {
   const rows: string[] = [];
 
   rows.push(HEADERS.map(escapeCSV).join(","));

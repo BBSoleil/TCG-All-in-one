@@ -22,7 +22,7 @@ export async function GET(
   const cardsResult = await getAllCollectionCards(id, session.user.id);
   const cards = cardsResult.success ? cardsResult.data : [];
 
-  const csv = generateCSV(cards, collectionResult.data.name);
+  const csv = generateCSV(cards);
   const filename = `${collectionResult.data.name.replace(/[^a-zA-Z0-9-_ ]/g, "")}.csv`;
 
   return new NextResponse(csv, {

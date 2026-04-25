@@ -25,7 +25,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ gameType: string; setName: string }>;
 }): Promise<Metadata> {
-  const { gameType, setName } = await params;
+  const { setName } = await params;
   const decoded = decodeURIComponent(setName);
   return {
     title: `${decoded} | TCG All-in-One`,
