@@ -60,21 +60,33 @@ export interface CardDetail {
   } | null;
 }
 
+const VALID_GAME_TYPES = new Set<string>(["POKEMON", "YUGIOH", "MTG", "ONEPIECE"]);
+
 async function getSetsForGameUncached(
   gameType?: GameType,
 ): Promise<SetInfo[]> {
+  // Allowlist-validate gameType before use. The function is called via /api/cards/sets
+  // where gameType is a typecast URL param — TypeScript types erase at runtime, so
+  // unvalidated input would interpolate into raw SQL. Reject anything outside the enum.
+  if (gameType && !VALID_GAME_TYPES.has(gameType)) {
+    return [];
+  }
+
   // Group by setName + gameType only (not setCode, which includes card numbers for YGO).
   // Sort by MIN(setCode) per-game so One Piece goes OP-01 → OP-11 → EB-01 → PRB-01 → ST-01
   // (alphanumeric). Null/missing codes fall to the end so sets still show up.
-  const gameFilter = gameType ? `AND "gameType" = '${gameType}'` : "";
-  const rows = await prisma.$queryRawUnsafe<
-    { setName: string; setCode: string | null; gameType: string; cardCount: number }[]
-  >(
-    `SELECT "setName", MIN("setCode") as "setCode", "gameType", COUNT(id)::int as "cardCount"
-     FROM cards WHERE "setName" IS NOT NULL ${gameFilter}
-     GROUP BY "setName", "gameType"
-     ORDER BY "gameType" ASC, MIN("setCode") ASC NULLS LAST, "setName" ASC`,
-  );
+  const baseQuery = `SELECT "setName", MIN("setCode") as "setCode", "gameType", COUNT(id)::int as "cardCount"
+     FROM cards WHERE "setName" IS NOT NULL`;
+  const groupOrder = `GROUP BY "setName", "gameType"
+     ORDER BY "gameType" ASC, MIN("setCode") ASC NULLS LAST, "setName" ASC`;
+
+  const rows = gameType
+    ? await prisma.$queryRawUnsafe<
+        { setName: string; setCode: string | null; gameType: string; cardCount: number }[]
+      >(`${baseQuery} AND "gameType" = $1 ${groupOrder}`, gameType)
+    : await prisma.$queryRawUnsafe<
+        { setName: string; setCode: string | null; gameType: string; cardCount: number }[]
+      >(`${baseQuery} ${groupOrder}`);
 
   return rows.map((r) => ({
     setName: r.setName,

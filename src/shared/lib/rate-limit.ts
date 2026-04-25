@@ -69,4 +69,5 @@ export const RATE_LIMITS = {
   followUser: { maxRequests: 20, windowMs: 60_000 },
   importCards: { maxRequests: 5, windowMs: 60_000 },
   cardSearch: { maxRequests: 60, windowMs: 60_000 },
+  photoUpload: { maxRequests: 20, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
