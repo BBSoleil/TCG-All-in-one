@@ -33,6 +33,8 @@ export const addCardSchema = z.object({
   language: z.enum(LANGUAGES).default("EN"),
   foil: z.preprocess((val) => val === "true" || val === true, z.boolean()).default(false),
   notes: z.string().max(500).optional(),
+  acquiredPrice: z.preprocess((val) => (val === "" || val === null || val === undefined) ? undefined : Number(val), z.number().min(0).optional()),
+  acquiredAt: z.preprocess((val) => (val === "" || val === null || val === undefined) ? undefined : val, z.string().optional()),
 });
 
 export const updateCardSchema = z.object({

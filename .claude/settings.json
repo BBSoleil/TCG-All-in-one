@@ -1,19 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "bash(npm run *)",
-      "bash(npx prisma *)",
-      "bash(npx vitest *)",
-      "bash(npx tsc *)",
-      "bash(npx eslint *)",
-      "bash(git *)",
-      "bash(mkdir *)",
-      "bash(cat *)",
-      "bash(ls *)"
+      "Bash(npm run *)",
+      "Bash(npx prisma *)",
+      "Bash(npx vitest *)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(git *)",
+      "Bash(mkdir *)",
+      "Bash(cat *)",
+      "Bash(ls *)"
     ],
     "deny": [
-      "bash(rm -rf /)",
-      "bash(sudo *)"
+      "Bash(rm -rf /)",
+      "Bash(sudo *)"
     ]
   }
 }

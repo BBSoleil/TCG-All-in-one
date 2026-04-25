@@ -5,10 +5,10 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/shared/lib/prisma";
 import { rateLimit, RATE_LIMITS } from "@/shared/lib/rate-limit";
-import { makeOffer, acceptOffer, declineOffer, withdrawOffer } from "../services/offers";
+import { makeOffer, acceptOffer, declineOffer, withdrawOffer, counterOffer } from "../services/offers";
 import { rateTransaction } from "../services/ratings";
 import { addCardToCollection } from "@/features/collection/services/collection-cards";
-import { makeOfferSchema, rateTransactionSchema } from "../types/schemas";
+import { makeOfferSchema, counterOfferSchema, rateTransactionSchema } from "../types/schemas";
 
 export async function makeOfferAction(
   listingId: string,
@@ -97,6 +97,54 @@ export async function withdrawOfferAction(
 
   const result = await withdrawOffer(offerId, session.user.id);
   if (!result.success) return { error: result.error.message };
+
+  revalidatePath("/market/offers");
+  return {};
+}
+
+export async function counterOfferAction(
+  offerId: string,
+  counterPrice: number,
+  message?: string,
+): Promise<{ error?: string }> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const parsed = counterOfferSchema.safeParse({ offerId, counterPrice, message });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  // Fetch offer details for notification
+  const offer = await prisma.offer.findUnique({
+    where: { id: offerId },
+    select: {
+      buyerId: true,
+      listing: {
+        select: { card: { select: { name: true } }, id: true },
+      },
+    },
+  });
+
+  const result = await counterOffer(offerId, session.user.id, parsed.data.counterPrice, parsed.data.message);
+  if (!result.success) return { error: result.error.message };
+
+  // Notify buyer about the counter-offer
+  if (offer) {
+    await prisma.notification.create({
+      data: {
+        userId: offer.buyerId,
+        type: "OFFER_COUNTERED",
+        title: "Counter-Offer Received",
+        message: `The seller countered your offer on ${offer.listing.card.name} with a new price.`,
+        link: "/market/offers",
+      },
+    }).catch(() => {
+      // Non-critical
+    });
+
+    revalidatePath(`/market/listing/${offer.listing.id}`);
+  }
 
   revalidatePath("/market/offers");
   return {};

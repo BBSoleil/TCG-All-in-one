@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getUserOffersSent, getUserOffersReceived } from "@/features/market/services/offers";
-import { AcceptOfferButton, DeclineOfferButton, WithdrawOfferButton } from "@/features/market/components";
+import { AcceptOfferButton, DeclineOfferButton, WithdrawOfferButton, CounterOfferButton } from "@/features/market/components";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,8 +61,9 @@ export default async function OffersPage() {
                         <Badge variant="outline" className="mt-1">{offer.status}</Badge>
                       </div>
                       {offer.status === "PENDING" && (
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                           <AcceptOfferButton offerId={offer.id} />
+                          <CounterOfferButton offerId={offer.id} />
                           <DeclineOfferButton offerId={offer.id} />
                         </div>
                       )}

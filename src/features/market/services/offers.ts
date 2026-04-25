@@ -142,6 +142,52 @@ export async function withdrawOffer(
   }
 }
 
+export async function counterOffer(
+  offerId: string,
+  sellerId: string,
+  counterPrice: number,
+  message?: string,
+): Promise<Result<{ id: string }>> {
+  try {
+    const offer = await prisma.offer.findUnique({
+      where: { id: offerId },
+      include: { listing: true },
+    });
+    if (!offer || offer.status !== "PENDING") {
+      return { success: false, error: new Error("Offer not found or not pending") };
+    }
+    if (offer.listing.userId !== sellerId) {
+      return { success: false, error: new Error("Not authorized") };
+    }
+    if (offer.expiresAt && offer.expiresAt < new Date()) {
+      await prisma.offer.update({ where: { id: offerId }, data: { status: "EXPIRED" } });
+      return { success: false, error: new Error("This offer has expired") };
+    }
+
+    // Mark original as COUNTERED, create new offer with counter price
+    const [, counterOfferRecord] = await prisma.$transaction([
+      prisma.offer.update({
+        where: { id: offerId },
+        data: { status: "COUNTERED" },
+      }),
+      prisma.offer.create({
+        data: {
+          listingId: offer.listingId,
+          buyerId: offer.buyerId,
+          price: counterPrice,
+          message: message || `Counter-offer: ${counterPrice}`,
+          expiresAt: new Date(Date.now() + OFFER_EXPIRY_HOURS * 60 * 60 * 1000),
+        },
+        select: { id: true },
+      }),
+    ]);
+
+    return { success: true, data: counterOfferRecord };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error : new Error("Failed to counter offer") };
+  }
+}
+
 export async function getOffersOnListing(
   listingId: string,
   sellerId: string,

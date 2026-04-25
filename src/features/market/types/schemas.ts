@@ -52,6 +52,12 @@ export const makeOfferSchema = z.object({
   message: z.string().max(500, "Message must be 500 characters or less").optional(),
 });
 
+export const counterOfferSchema = z.object({
+  offerId: z.string().min(1, "Offer ID is required"),
+  counterPrice: z.coerce.number().positive("Counter price must be greater than 0"),
+  message: z.string().max(500, "Message must be 500 characters or less").optional(),
+});
+
 export const rateTransactionSchema = z.object({
   transactionId: z.string().min(1, "Transaction ID is required"),
   score: z.coerce.number().int().min(1, "Score must be at least 1").max(5, "Score must be at most 5"),
@@ -62,4 +68,5 @@ export type CreateListingInput = z.infer<typeof createListingSchema>;
 export type ShippingZoneInput = z.infer<typeof shippingZoneSchema>;
 export type UpdateListingPriceInput = z.infer<typeof updateListingPriceSchema>;
 export type MakeOfferInput = z.infer<typeof makeOfferSchema>;
+export type CounterOfferInput = z.infer<typeof counterOfferSchema>;
 export type RateTransactionInput = z.infer<typeof rateTransactionSchema>;

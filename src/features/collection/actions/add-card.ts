@@ -23,6 +23,8 @@ export async function addCard(
     language: formData.get("language") || undefined,
     foil: formData.get("foil") || undefined,
     notes: formData.get("notes") || undefined,
+    acquiredPrice: formData.get("acquiredPrice") || undefined,
+    acquiredAt: formData.get("acquiredAt") || undefined,
   };
 
   const parsed = addCardSchema.safeParse(raw);
@@ -45,6 +47,8 @@ export async function addCard(
     parsed.data.notes,
     parsed.data.language,
     parsed.data.foil,
+    parsed.data.acquiredPrice,
+    parsed.data.acquiredAt,
   );
 
   if (!result.success) {

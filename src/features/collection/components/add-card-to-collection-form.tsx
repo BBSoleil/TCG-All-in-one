@@ -129,6 +129,28 @@ export function AddCardToCollectionForm({
         <Label htmlFor="foil">Foil / Holographic</Label>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor="acquiredPrice">Acquired Price</Label>
+          <Input
+            id="acquiredPrice"
+            name="acquiredPrice"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="e.g. 12.50"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="acquiredAt">Acquired Date</Label>
+          <Input
+            id="acquiredAt"
+            name="acquiredAt"
+            type="date"
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Input id="notes" name="notes" placeholder="Optional notes" />
