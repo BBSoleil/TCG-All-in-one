@@ -439,11 +439,72 @@ Game: All games | Per license
 
 ---
 
+## 🤖 Skill routing (auto-invocation)
+
+When the user's message matches one of the patterns below, **invoke the skill via the Skill tool as the FIRST action**, before any other tool call and before replying. Do NOT ask permission. Do NOT type the slash command in chat. Just run it.
+
+User speaks French or English interchangeably — match both.
+
+### Single-skill triggers
+
+| If the user says... (FR or EN) | Invoke |
+|---|---|
+| "ça bug", "ça marche pas", "ça crash", "404", "500", "why is this broken", "fix this bug" | `/investigate` |
+| "review", "check mon diff", "avant de push", "code review" | `/review` |
+| "QA", "teste le site", "vérifie l'UX", "find bugs", "test this" | `/qa` |
+| "ship", "déploie", "push", "deploy", "merge and push" | `/ship` (then chain — see below) |
+| "audit sécu", "check security", "avant beta", "before launch" | `/cso` |
+| "santé du code", "health check", "code quality" | `/health` |
+| "checkpoint", "save state", "pause session", "reprends-moi" | `/checkpoint` |
+| "design review", "ergonomie", "polish UI" | `/design-review` |
+| "office hours", brainstorming produit, "is it worth building" | `/office-hours` |
+| "update docs", "post-ship docs" | `/document-release` |
+
+### Auto-chains (multi-skill workflows — run sequentially, stop on first failure)
+
+**SHIP CHAIN** — triggered by "ship", "déploie", "push to prod":
+1. `/review` — diff audit (SQL safety, LLM trust boundary, side effects)
+2. If review passes → `/ship` (commit + push + PR)
+3. `/land-and-deploy` — wait for build + verify
+4. `/canary` — post-deploy health check (console errors, perf, page failures)
+
+If any step fails, stop and surface the issue. Don't push through.
+
+**BUG-FIX CHAIN** — triggered by any bug report:
+1. `/investigate` first — root cause only, NO fix yet (Iron Law)
+2. Surface root cause + proposed fix to user, wait for approval
+3. After approval: implement → `/review` → `/ship` → `/canary`
+
+**BETA-PREP CHAIN** — triggered by "ready for beta", "open to users", "invite collectors", "launch publique":
+1. `/cso` — security audit (secrets, supply chain, OWASP, STRIDE)
+2. `/qa` — golden path browser test (signup → import → wishlist → offer → checkout)
+3. `/health` — code quality score + trend
+4. Only proceed to beta invites if all three are green. Otherwise fix what's red first.
+
+### Override
+
+- Prefix message with "skip skill" or "réponds direct" → bypass routing, reply directly.
+- User typed `/<command>` literally → run that exact skill, ignore routing table.
+
+### Don't auto-invoke
+- `/retro` — solo dev, premature
+- `/benchmark` — only when user asks about perf
+- `/autoplan` — overkill orchestration; run individual skills first
+- `/learn`, `/freeze`, `/guard`, `/careful` — user-initiated only
+
 ---
 
 ## 📝 Session Log
 
 <!-- Claude Code: update this section at end of each session -->
+
+### Session: 2026-03-14
+- **Worked on**: Schema gap closure — 4 features to make collection + marketplace functional
+- **Created**: ShippingZone DB model. Offer-expiry service + cron route. Photo upload API (`/api/upload`) with magic byte validation (JPEG/PNG/WebP). 4 new test files (25 tests): collection-card-variants, offer-expiry, listing-photos-shipping, format-price.
+- **Modified**: CollectionCard: added language, foil, condition, forSale, forTrade, acquiredPrice, acquiredAt. Changed unique constraint from `[collectionId, cardId]` to `[collectionId, cardId, language, foil, condition]`. Service uses findFirst+create/update (Prisma can't upsert on 5-field compound keys). Listing: added currency, language, photos[], shippingZones relation. Offer: added expiresAt (48h), EXPIRED status, defense-in-depth checks. `formatPrice()` now currency-aware. UI: language dropdown + foil checkbox on add-card form, language/foil badges on card list, currency selector + photo upload + shipping zones on create-listing form.
+- **Decisions made**: findFirst+create/update over upsert for 5-field compound key. Vercel Blob for photos. Server-side magic byte validation. Upload-then-create with cleanup on failure. Shipping zones optional (0-3 per listing). Offer-expiry cron daily (Vercel Hobby limit) + inline defense-in-depth. Migration made idempotent with IF NOT EXISTS guards after partial-apply recovery.
+- **Blockers**: Migration partial-apply (constraint vs index naming) — fixed with idempotent SQL. Vercel Hobby 1x/day cron limit — changed from 6h to daily.
+- **Next up**: Remaining schema gaps (SetType enum), Google OAuth publish, UI polish
 
 ### Session: 2026-03-10
 - **Worked on**: Collection performance + UX/Design overhaul (8 phases)
