@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 import { browseListings } from "@/features/market/services/listings";
 import { getWishlistMatches } from "@/features/market/services/ratings";
 import { getMarketOverview } from "@/features/market/services/market-stats";
-import { ListingCard, MarketFilters, MarketPagination, PriceTicker, MarketOverview } from "@/features/market/components";
+import { ListingCard, MarketFilters, MarketPagination, PriceTicker, MarketOverview, WishlistQuickOffer } from "@/features/market/components";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -126,17 +126,26 @@ export default async function MarketPage({
                       {m.listing.card.name}
                     </Link>
                     <p className="text-xs text-muted-foreground">
-                      {formatPrice(m.listing.price)} — {m.listing.condition}
+                      {formatPrice(m.listing.price, m.listing.currency)} — {m.listing.condition}
                       {m.targetPrice !== null && (
                         <span className={m.listing.price <= m.targetPrice ? " text-emerald-600 dark:text-emerald-400" : ""}>
-                          {" "}(target: {formatPrice(m.targetPrice)})
+                          {" "}(target: {formatPrice(m.targetPrice, m.listing.currency)})
                         </span>
                       )}
                     </p>
                   </div>
-                  <Link href={`/market/listing/${m.listing.id}`} className="shrink-0">
-                    <Button size="sm" variant="outline" className="w-full sm:w-auto">View</Button>
-                  </Link>
+                  <div className="flex shrink-0 gap-2">
+                    <WishlistQuickOffer
+                      listingId={m.listing.id}
+                      listingPrice={m.listing.price}
+                      targetPrice={m.targetPrice}
+                      currency={m.listing.currency}
+                      cardName={m.listing.card.name}
+                    />
+                    <Link href={`/market/listing/${m.listing.id}`}>
+                      <Button size="sm" variant="outline" className="w-full sm:w-auto">View</Button>
+                    </Link>
+                  </div>
                 </div>
               ))}
               {matches.length > 5 && (
