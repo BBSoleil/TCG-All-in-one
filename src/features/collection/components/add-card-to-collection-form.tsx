@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { addCard } from "@/features/collection/actions/add-card";
+import { fetchCardsForSelect } from "@/features/cards/actions";
 import { CONDITION_OPTIONS, LANGUAGE_OPTIONS } from "@/features/collection/schemas";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,15 +20,34 @@ import type { CollectionActionState } from "@/features/collection/types";
 
 const initialState: CollectionActionState = {};
 
+interface CardOption {
+  id: string;
+  name: string;
+  setName: string | null;
+  setCode: string | null;
+  rarity: string | null;
+}
+
+function formatCardLabel(card: CardOption): string {
+  const set = card.setCode ? `${card.setName ?? ""} ${card.setCode}`.trim() : card.setName ?? "";
+  const rarity = card.rarity ? ` · ${card.rarity}` : "";
+  return set ? `${card.name} — ${set}${rarity}` : `${card.name}${rarity}`;
+}
+
 export function AddCardToCollectionForm({
   collectionId,
-  cards,
+  gameType,
   onSuccess,
 }: {
   collectionId: string;
-  cards: { id: string; name: string }[];
+  gameType: string;
   onSuccess?: () => void;
 }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<CardOption[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState("");
+  const [isSearching, startSearch] = useTransition();
+
   const [state, formAction, isPending] = useActionState(
     async (prev: CollectionActionState, formData: FormData) => {
       try {
@@ -48,24 +68,65 @@ export function AddCardToCollectionForm({
     initialState,
   );
 
+  // Debounced server search — fetches up to 50 matches per query, with set + rarity
+  // so duplicate-named cards across sets are distinguishable.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      startSearch(async () => {
+        const data = await fetchCardsForSelect(gameType, query);
+        setResults(data);
+      });
+    }, 200);
+    return () => clearTimeout(handle);
+  }, [query, gameType]);
+
+  const selected = results.find((c) => c.id === selectedCardId);
+
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="collectionId" value={collectionId} />
+      <input type="hidden" name="cardId" value={selectedCardId} />
 
       <div className="space-y-2">
-        <Label htmlFor="cardId">Card</Label>
-        <Select name="cardId" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a card" />
-          </SelectTrigger>
-          <SelectContent>
-            {cards.map((card) => (
-              <SelectItem key={card.id} value={card.id}>
-                {card.name}
-              </SelectItem>
+        <Label htmlFor="card-search">Search for a card</Label>
+        <Input
+          id="card-search"
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setSelectedCardId("");
+          }}
+          placeholder="Type a card name (e.g. Charizard, Blue-Eyes...)"
+          autoComplete="off"
+        />
+        {isSearching && (
+          <p className="text-xs text-muted-foreground">Searching…</p>
+        )}
+        {!isSearching && results.length === 0 && query.length > 0 && (
+          <p className="text-xs text-muted-foreground">No cards match.</p>
+        )}
+        {results.length > 0 && (
+          <div className="max-h-56 overflow-y-auto rounded-md border border-border bg-card">
+            {results.map((card) => (
+              <button
+                type="button"
+                key={card.id}
+                onClick={() => setSelectedCardId(card.id)}
+                className={`block w-full px-3 py-2 text-left text-sm hover:bg-muted ${
+                  selectedCardId === card.id ? "bg-primary/20" : ""
+                }`}
+              >
+                {formatCardLabel(card)}
+              </button>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        )}
+        {selected && (
+          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+            Selected: {formatCardLabel(selected)}
+          </p>
+        )}
         {state.fieldErrors?.cardId && (
           <p className="text-sm text-destructive">{state.fieldErrors.cardId[0]}</p>
         )}
@@ -170,8 +231,8 @@ export function AddCardToCollectionForm({
         <p className="text-sm text-destructive">{state.error}</p>
       ) : null}
 
-      <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Adding..." : "Add card"}
+      <Button type="submit" className="w-full" disabled={isPending || !selectedCardId}>
+        {isPending ? "Adding..." : selectedCardId ? "Add card" : "Pick a card first"}
       </Button>
     </form>
   );

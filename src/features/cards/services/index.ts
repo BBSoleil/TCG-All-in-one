@@ -277,14 +277,30 @@ export async function getCardById(id: string): Promise<Result<CardDetail>> {
   }
 }
 
+export interface CardSelectOption {
+  id: string;
+  name: string;
+  setName: string | null;
+  setCode: string | null;
+  rarity: string | null;
+}
+
 export async function searchCardsForSelect(
   gameType: string,
-): Promise<{ id: string; name: string }[]> {
+  query?: string,
+): Promise<CardSelectOption[]> {
+  if (!VALID_GAME_TYPES.has(gameType)) return [];
+
+  const where: Prisma.CardWhereInput = { gameType: gameType as PrismaGameType };
+  if (query && query.trim().length > 0) {
+    where.name = { contains: query.trim(), mode: "insensitive" };
+  }
+
   const cards = await prisma.card.findMany({
-    where: { gameType: gameType as PrismaGameType },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-    take: 200,
+    where,
+    select: { id: true, name: true, setName: true, setCode: true, rarity: true },
+    orderBy: [{ name: "asc" }, { setName: "asc" }],
+    take: 50,
   });
   return cards;
 }

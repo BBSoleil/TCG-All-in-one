@@ -8,4 +8,5 @@ export {
   getPokemonSets,
   getMtgSets,
   getOnePieceSets,
+  getYugiohSets,
 } from "./import-cards";

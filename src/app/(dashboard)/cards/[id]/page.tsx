@@ -114,7 +114,7 @@ export default async function CardDetailPage({
           )}
 
           <div className="flex flex-wrap gap-2">
-            <AddToCollectionDialog cardId={card.id} cardName={card.name} />
+            <AddToCollectionDialog cardId={card.id} cardName={card.name} gameType={card.gameType} />
             <AddToDeckDialog cardId={card.id} cardName={card.name} gameType={card.gameType} />
             <AddToWishlistDialog cardId={card.id} cardName={card.name} />
             <Link href={`/market?cardId=${card.id}`}>

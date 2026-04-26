@@ -46,12 +46,41 @@ function getCardType(type: string): string {
   return type;
 }
 
+export interface YugiohSet {
+  set_name: string;
+  set_code: string;
+  num_of_cards: number;
+  tcg_date?: string;
+}
+
+export async function fetchYugiohSets(): Promise<Result<YugiohSet[]>> {
+  try {
+    const response = await fetch("https://db.ygoprodeck.com/api/v7/cardsets.php");
+    if (!response.ok) {
+      return { success: false, error: new Error(`YGOProDeck sets API error: ${response.status}`) };
+    }
+    const sets = (await response.json()) as YugiohSet[];
+    // Sort newest first by tcg_date, fallback alphabetical for sets without dates.
+    sets.sort((a, b) => {
+      if (a.tcg_date && b.tcg_date) return b.tcg_date.localeCompare(a.tcg_date);
+      if (a.tcg_date) return -1;
+      if (b.tcg_date) return 1;
+      return a.set_name.localeCompare(b.set_name);
+    });
+    return { success: true, data: sets };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error : new Error("Failed to fetch sets") };
+  }
+}
+
 export async function importYugiohCards(
   offset: number = 0,
   num: number = 50,
+  setName?: string,
 ): Promise<Result<{ imported: number; hasMore: boolean }>> {
   try {
-    const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?num=${num}&offset=${offset}`;
+    const setFilter = setName ? `&cardset=${encodeURIComponent(setName)}` : "";
+    const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?num=${num}&offset=${offset}${setFilter}`;
     const response = await fetch(url);
     if (!response.ok) {
       return { success: false, error: new Error(`YGOProDeck API error: ${response.status}`) };
